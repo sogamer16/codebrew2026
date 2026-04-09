@@ -1,0 +1,366 @@
+[
+  {
+    "name": "Big Bang",
+    "year": -13800000000,
+    "description": "The universe is born. All matter, energy, space, and time emerge from a singularity.",
+    "category": "cosmic",
+    "emoji": "💥"
+  },
+  {
+    "name": "Earth Forms",
+    "year": -4500000000,
+    "description": "Our solar system coalesces from a cloud of gas and dust. Earth takes shape.",
+    "category": "cosmic",
+    "emoji": "🌍"
+  },
+  {
+    "name": "First Life on Earth",
+    "year": -3800000000,
+    "description": "The earliest single-celled organisms appear in Earth's primordial oceans.",
+    "category": "cosmic",
+    "emoji": "🦠"
+  },
+  {
+    "name": "Dinosaurs Appear",
+    "year": -230000000,
+    "description": "The Triassic period gives rise to the first dinosaurs.",
+    "category": "prehistoric",
+    "emoji": "🦕"
+  },
+  {
+    "name": "Dinosaurs Extinct",
+    "year": -66000000,
+    "description": "The Chicxulub asteroid impact wipes out 75% of species, ending the age of dinosaurs.",
+    "category": "prehistoric",
+    "emoji": "☄️"
+  },
+  {
+    "name": "First Humans",
+    "year": -300000,
+    "description": "Homo sapiens emerge in Africa, beginning humanity's long journey.",
+    "category": "prehistoric",
+    "emoji": "🧑"
+  },
+  {
+    "name": "First Cave Paintings",
+    "year": -40000,
+    "description": "Humans create the earliest known art in caves across Europe and Asia.",
+    "category": "prehistoric",
+    "emoji": "🖼️"
+  },
+  {
+    "name": "Agriculture Begins",
+    "year": -10000,
+    "description": "Humans start farming in the Fertile Crescent, beginning civilisation.",
+    "category": "ancient",
+    "emoji": "🌾"
+  },
+  {
+    "name": "Stonehenge Built",
+    "year": -3000,
+    "description": "Neolithic people construct the iconic stone circle in England.",
+    "category": "ancient",
+    "emoji": "🗿"
+  },
+  {
+    "name": "Great Pyramid Built",
+    "year": -2560,
+    "description": "Pharaoh Khufu's Great Pyramid at Giza is completed — one of the seven wonders.",
+    "category": "ancient",
+    "emoji": "🔺"
+  },
+  {
+    "name": "Trojan War",
+    "year": -1184,
+    "description": "The legendary siege of Troy, immortalised by Homer in the Iliad.",
+    "category": "ancient",
+    "emoji": "⚔️"
+  },
+  {
+    "name": "Homer writes the Iliad",
+    "year": -750,
+    "description": "Homer composes the Iliad and the Odyssey, foundational texts of Western literature.",
+    "category": "ancient",
+    "emoji": "📜"
+  },
+  {
+    "name": "Birth of Buddha",
+    "year": -563,
+    "description": "Siddhartha Gautama is born in what is now Nepal, later to become the Buddha.",
+    "category": "ancient",
+    "emoji": "🪷"
+  },
+  {
+    "name": "Birth of Confucius",
+    "year": -551,
+    "description": "The Chinese philosopher Confucius is born, shaping East Asian culture for millennia.",
+    "category": "ancient",
+    "emoji": "📚"
+  },
+  {
+    "name": "Battle of Marathon",
+    "year": -490,
+    "description": "The Athenians defeat the Persian army, saving Greek democracy.",
+    "category": "ancient",
+    "emoji": "🏃"
+  },
+  {
+    "name": "Parthenon Completed",
+    "year": -432,
+    "description": "Athens completes the iconic Parthenon temple atop the Acropolis.",
+    "category": "ancient",
+    "emoji": "🏛️"
+  },
+  {
+    "name": "Alexander the Great Born",
+    "year": -356,
+    "description": "Alexander III of Macedon is born, destined to conquer much of the known world.",
+    "category": "ancient",
+    "emoji": "👑"
+  },
+  {
+    "name": "Birth of Jesus",
+    "year": -4,
+    "description": "Jesus of Nazareth is born in Bethlehem. The event that reset the Western calendar.",
+    "category": "ancient",
+    "emoji": "⭐"
+  },
+  {
+    "name": "Crucifixion of Jesus",
+    "year": 33,
+    "description": "Jesus is crucified in Jerusalem, an event that shaped the course of human history.",
+    "category": "ancient",
+    "emoji": "✝️"
+  },
+  {
+    "name": "Eruption of Vesuvius",
+    "year": 79,
+    "description": "Mount Vesuvius erupts and buries Pompeii and Herculaneum under volcanic ash.",
+    "category": "ancient",
+    "emoji": "🌋"
+  },
+  {
+    "name": "Fall of Rome",
+    "year": 476,
+    "description": "The Western Roman Empire falls as Romulus Augustulus is deposed.",
+    "category": "medieval",
+    "emoji": "🏚️"
+  },
+  {
+    "name": "Muhammad Born",
+    "year": 570,
+    "description": "The prophet Muhammad is born in Mecca, Arabia.",
+    "category": "medieval",
+    "emoji": "🕌"
+  },
+  {
+    "name": "Battle of Hastings",
+    "year": 1066,
+    "description": "William the Conqueror defeats King Harold II, forever changing England.",
+    "category": "medieval",
+    "emoji": "🏹"
+  },
+  {
+    "name": "Magna Carta Signed",
+    "year": 1215,
+    "description": "English barons force King John to sign the Magna Carta, a landmark in human rights.",
+    "category": "medieval",
+    "emoji": "📋"
+  },
+  {
+    "name": "Black Death Arrives in Europe",
+    "year": 1347,
+    "description": "Bubonic plague reaches Europe, killing up to half the population over the next years.",
+    "category": "medieval",
+    "emoji": "💀"
+  },
+  {
+    "name": "Gutenberg's Printing Press",
+    "year": 1440,
+    "description": "Johannes Gutenberg invents movable type, revolutionising the spread of knowledge.",
+    "category": "modern",
+    "emoji": "📰"
+  },
+  {
+    "name": "Columbus Reaches Americas",
+    "year": 1492,
+    "description": "Christopher Columbus makes landfall in the Bahamas, connecting two worlds.",
+    "category": "modern",
+    "emoji": "🧭"
+  },
+  {
+    "name": "Copernicus Publishes Heliocentric Theory",
+    "year": 1543,
+    "description": "Copernicus proposes the Sun, not Earth, is at the centre of the solar system.",
+    "category": "modern",
+    "emoji": "🌞"
+  },
+  {
+    "name": "Shakespeare Born",
+    "year": 1564,
+    "description": "William Shakespeare is born in Stratford-upon-Avon, England.",
+    "category": "modern",
+    "emoji": "🎭"
+  },
+  {
+    "name": "Galileo Uses Telescope",
+    "year": 1610,
+    "description": "Galileo turns his telescope to the heavens and discovers Jupiter's moons.",
+    "category": "modern",
+    "emoji": "🔭"
+  },
+  {
+    "name": "Newton's Principia Published",
+    "year": 1687,
+    "description": "Isaac Newton publishes the laws of motion and universal gravitation.",
+    "category": "modern",
+    "emoji": "🍎"
+  },
+  {
+    "name": "American Revolution",
+    "year": 1776,
+    "description": "The thirteen colonies declare independence from Britain, founding the United States.",
+    "category": "modern",
+    "emoji": "🗽"
+  },
+  {
+    "name": "French Revolution",
+    "year": 1789,
+    "description": "The French people overthrow the monarchy in a revolution that reshapes Europe.",
+    "category": "modern",
+    "emoji": "🗼"
+  },
+  {
+    "name": "Darwin's Origin of Species",
+    "year": 1859,
+    "description": "Charles Darwin publishes his theory of evolution by natural selection.",
+    "category": "modern",
+    "emoji": "🐒"
+  },
+  {
+    "name": "First Telephone Call",
+    "year": 1876,
+    "description": "Alexander Graham Bell makes the first telephone call to his assistant Thomas Watson.",
+    "category": "modern",
+    "emoji": "📞"
+  },
+  {
+    "name": "Wright Brothers First Flight",
+    "year": 1903,
+    "description": "Orville Wright pilots the Flyer for 12 seconds at Kitty Hawk, North Carolina.",
+    "category": "modern",
+    "emoji": "✈️"
+  },
+  {
+    "name": "Einstein's Special Relativity",
+    "year": 1905,
+    "description": "Albert Einstein publishes his special theory of relativity, changing physics forever.",
+    "category": "modern",
+    "emoji": "⚛️"
+  },
+  {
+    "name": "Titanic Sinks",
+    "year": 1912,
+    "description": "The RMS Titanic strikes an iceberg and sinks on its maiden voyage.",
+    "category": "modern",
+    "emoji": "🚢"
+  },
+  {
+    "name": "World War I Begins",
+    "year": 1914,
+    "description": "The assassination of Archduke Franz Ferdinand triggers the Great War.",
+    "category": "modern",
+    "emoji": "💣"
+  },
+  {
+    "name": "World War II Begins",
+    "year": 1939,
+    "description": "Germany invades Poland. Britain and France declare war. The world is at war again.",
+    "category": "modern",
+    "emoji": "🌍"
+  },
+  {
+    "name": "Hiroshima Atomic Bomb",
+    "year": 1945,
+    "description": "The United States drops an atomic bomb on Hiroshima, Japan.",
+    "category": "modern",
+    "emoji": "☢️"
+  },
+  {
+    "name": "DNA Double Helix Discovered",
+    "year": 1953,
+    "description": "Watson and Crick describe the double helix structure of DNA.",
+    "category": "modern",
+    "emoji": "🧬"
+  },
+  {
+    "name": "Sputnik Launched",
+    "year": 1957,
+    "description": "The Soviet Union launches Sputnik 1, the first artificial satellite.",
+    "category": "modern",
+    "emoji": "🛰️"
+  },
+  {
+    "name": "First Human in Space",
+    "year": 1961,
+    "description": "Yuri Gagarin becomes the first human in space aboard Vostok 1.",
+    "category": "modern",
+    "emoji": "🚀"
+  },
+  {
+    "name": "JFK Assassination",
+    "year": 1963,
+    "description": "President John F. Kennedy is assassinated in Dallas, Texas.",
+    "category": "modern",
+    "emoji": "🌹"
+  },
+  {
+    "name": "Moon Landing",
+    "year": 1969,
+    "description": "Neil Armstrong and Buzz Aldrin become the first humans to walk on the Moon.",
+    "category": "modern",
+    "emoji": "🌕"
+  },
+  {
+    "name": "World Wide Web Invented",
+    "year": 1989,
+    "description": "Tim Berners-Lee proposes the World Wide Web at CERN.",
+    "category": "modern",
+    "emoji": "🌐"
+  },
+  {
+    "name": "Berlin Wall Falls",
+    "year": 1989,
+    "description": "The Berlin Wall falls, ending the Cold War division of Europe.",
+    "category": "modern",
+    "emoji": "🧱"
+  },
+  {
+    "name": "Human Genome Sequenced",
+    "year": 2003,
+    "description": "The Human Genome Project completes the first full sequence of human DNA.",
+    "category": "modern",
+    "emoji": "🧬"
+  },
+  {
+    "name": "iPhone Released",
+    "year": 2007,
+    "description": "Apple releases the first iPhone, transforming human communication.",
+    "category": "modern",
+    "emoji": "📱"
+  },
+  {
+    "name": "First Black Hole Image",
+    "year": 2019,
+    "description": "The Event Horizon Telescope captures the first ever image of a black hole.",
+    "category": "modern",
+    "emoji": "🕳️"
+  },
+  {
+    "name": "James Webb Telescope Launched",
+    "year": 2021,
+    "description": "NASA launches the James Webb Space Telescope, the most powerful ever built.",
+    "category": "modern",
+    "emoji": "🔭"
+  }
+]
