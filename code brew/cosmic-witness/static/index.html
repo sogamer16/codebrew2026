@@ -484,6 +484,69 @@ html,body{
 .letter-submit{width:100%;padding:11px;background:linear-gradient(135deg,#7b2fff,#b060ff);border:none;border-radius:10px;color:#fff;font-family:'Orbitron',sans-serif;font-size:.72rem;letter-spacing:.08em;cursor:pointer;margin-top:10px}
 .letters-empty{text-align:center;padding:28px 0;color:var(--dim);font-size:.78rem}
 
+/* ══ FAMILY CONSTELLATION ══ */
+#family-modal{display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);align-items:center;justify-content:center}
+#family-modal.open{display:flex}
+.family-box{background:rgba(4,8,24,.97);border:1px solid rgba(34,211,164,.35);border-radius:22px;padding:24px 26px 28px;max-width:580px;width:94%;max-height:88vh;overflow-y:auto;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.8)}
+.family-sub{font-size:.72rem;color:var(--mid);margin-bottom:16px;line-height:1.65}
+.family-close{position:absolute;top:14px;right:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:4px 10px;color:#c8dcff;font-size:.9rem;cursor:pointer;transition:.2s}
+.family-close:hover{background:rgba(255,100,100,.12);border-color:rgba(255,100,100,.3);color:#ff9b9b}
+/* tabs */
+.fm-tabs{display:flex;gap:8px;margin-bottom:18px}
+.fm-tab{flex:1;padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:var(--mid);font-size:.72rem;cursor:pointer;font-family:'Orbitron',sans-serif;letter-spacing:.05em;transition:.2s;text-align:center}
+.fm-tab.active{background:rgba(34,211,164,.12);border-color:rgba(34,211,164,.5);color:var(--green)}
+.fm-tab:hover:not(.active){background:rgba(255,255,255,.07);color:var(--text)}
+/* member rows */
+.fm-member-row{display:flex;gap:8px;margin-bottom:9px;align-items:center}
+.fm-name-in{flex:1.8;padding:9px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:9px;color:#e8f0ff;font-family:'Inter',sans-serif;font-size:.82rem;outline:none;transition:.2s}
+.fm-name-in:focus{border-color:rgba(34,211,164,.55);background:rgba(34,211,164,.05)}
+.fm-date-group{display:flex;gap:5px;align-items:center;flex:2}
+.fm-day-in,.fm-mon-in{padding:8px 6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;color:#c8dcff;font-family:'Space Mono',monospace;font-size:.76rem;outline:none;cursor:pointer;transition:.2s}
+.fm-day-in{width:54px}
+.fm-mon-in{width:62px}
+.fm-day-in:focus,.fm-mon-in:focus{border-color:rgba(34,211,164,.5)}
+.fm-year-in{flex:1;padding:8px 8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;color:#c8dcff;font-family:'Space Mono',monospace;font-size:.76rem;outline:none;transition:.2s;min-width:0}
+.fm-year-in:focus{border-color:rgba(34,211,164,.5)}
+.fm-remove{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:7px;padding:6px 8px;color:#5a7090;font-size:.82rem;cursor:pointer;flex-shrink:0;transition:.2s;line-height:1}
+.fm-remove:hover{background:rgba(255,80,80,.1);border-color:rgba(255,80,80,.3);color:#ff8b8b}
+.fm-row-btns{display:flex;gap:10px;margin:10px 0 18px}
+.fm-add-btn{flex:1;padding:10px;background:rgba(34,211,164,.08);border:1.5px solid rgba(34,211,164,.4);border-radius:9px;color:#22d3a4;font-size:.74rem;cursor:pointer;font-family:'Orbitron',sans-serif;letter-spacing:.04em;transition:.2s}
+.fm-add-btn:hover{background:rgba(34,211,164,.16);border-color:rgba(34,211,164,.65)}
+.fm-go-btn{flex:2.2;padding:10px 18px;background:linear-gradient(135deg,#1aaa84,#2d7fd6);border:none;border-radius:9px;color:#fff;font-family:'Orbitron',sans-serif;font-size:.78rem;letter-spacing:.06em;cursor:pointer;transition:.2s;box-shadow:0 4px 18px rgba(34,211,164,.2)}
+.fm-go-btn:hover{filter:brightness(1.14);box-shadow:0 6px 22px rgba(34,211,164,.3)}
+#fm-sky-wrap{border-radius:12px;overflow:hidden;background:#000;margin-bottom:14px;border:1px solid rgba(34,211,164,.15)}
+#fm-sky-canvas{width:100%;height:210px;display:block}
+.fm-star-cards{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.fm-star-card{background:rgba(20,40,60,.6);border:1px solid rgba(34,211,164,.18);border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start}
+.fm-star-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.fm-star-info{flex:1;min-width:0}
+.fm-star-person{font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--green);font-family:'Orbitron',sans-serif;margin-bottom:2px}
+.fm-star-name{font-size:.88rem;font-weight:600;color:var(--gold);margin-bottom:2px}
+.fm-star-dist{font-size:.64rem;font-family:'Space Mono',monospace;color:var(--dim);margin-bottom:5px}
+.fm-star-sky{font-size:.7rem;color:var(--mid);line-height:1.7}
+.fm-find-tip{font-size:.68rem;color:var(--text);background:rgba(77,159,255,.06);border:1px solid rgba(77,159,255,.14);border-radius:7px;padding:6px 10px;margin-top:6px;line-height:1.6}
+.fm-action-row{display:flex;gap:10px}
+.fm-action-btn{flex:1;padding:11px;border-radius:10px;font-family:'Orbitron',sans-serif;font-size:.72rem;letter-spacing:.06em;cursor:pointer;border:none;transition:.2s}
+.fm-3d-btn{background:rgba(77,159,255,.14);border:1.5px solid rgba(77,159,255,.45);color:#6ab8ff}
+.fm-3d-btn:hover{background:rgba(77,159,255,.24);box-shadow:0 0 18px rgba(77,159,255,.2)}
+.fm-cert-btn{background:rgba(255,215,0,.1);border:1.5px solid rgba(255,215,0,.45);color:#ffd700}
+.fm-cert-btn:hover{background:rgba(255,215,0,.18);box-shadow:0 0 18px rgba(255,215,0,.18)}
+#fm-loading{text-align:center;padding:24px 0;color:var(--mid);font-size:.8rem;letter-spacing:.04em}
+#fm-error{color:#ff8b8b;font-size:.74rem;padding:8px 0;display:none;background:rgba(255,80,80,.06);border-radius:8px;padding:8px 12px;margin-bottom:8px}
+/* reverse lookup */
+.rl-input-row{display:flex;gap:10px;margin-bottom:16px}
+.rl-input{flex:1;padding:10px 14px;background:rgba(255,255,255,.06);border:1.5px solid rgba(77,159,255,.25);border-radius:10px;color:#e8f0ff;font-family:'Inter',sans-serif;font-size:.84rem;outline:none;transition:.2s}
+.rl-input:focus{border-color:rgba(77,159,255,.6);background:rgba(77,159,255,.05)}
+.rl-btn{padding:10px 20px;background:linear-gradient(135deg,#1a5aa8,#2d3fa8);border:none;border-radius:10px;color:#fff;font-family:'Orbitron',sans-serif;font-size:.74rem;letter-spacing:.06em;cursor:pointer;white-space:nowrap;transition:.2s}
+.rl-btn:hover{filter:brightness(1.15)}
+.rl-card{background:rgba(10,20,45,.8);border:1px solid rgba(77,159,255,.2);border-radius:14px;padding:18px 20px}
+.rl-star-name{font-family:'Orbitron',sans-serif;font-size:1.1rem;font-weight:700;color:var(--gold);margin-bottom:4px}
+.rl-watching{font-size:.78rem;color:var(--mid);margin-bottom:12px;line-height:1.6}
+.rl-year-big{font-family:'Orbitron',sans-serif;font-size:2.2rem;font-weight:900;color:#fff;letter-spacing:.06em;line-height:1}
+.rl-era{display:inline-block;margin:6px 0 12px;padding:3px 12px;border-radius:20px;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;font-family:'Orbitron',sans-serif}
+.rl-search-btn{width:100%;margin-top:12px;padding:10px;background:rgba(77,159,255,.1);border:1.5px solid rgba(77,159,255,.35);border-radius:9px;color:#6ab8ff;font-family:'Orbitron',sans-serif;font-size:.72rem;letter-spacing:.06em;cursor:pointer;transition:.2s}
+.rl-search-btn:hover{background:rgba(77,159,255,.2)}
+
 /* ══ PDF EXPORT / MISC BUTTONS ══ */
 .pdf-export-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(255,215,0,.07);border:1px solid rgba(255,215,0,.25);border-radius:9px;color:var(--gold);font-size:.72rem;cursor:pointer;font-family:'Orbitron',sans-serif;letter-spacing:.06em;transition:all .2s}
 .pdf-export-btn:hover{background:rgba(255,215,0,.13);box-shadow:0 0 18px rgba(255,215,0,.12)}
@@ -502,10 +565,18 @@ html,body{
 ::-webkit-scrollbar-thumb{background:rgba(77,159,255,.2);border-radius:2px}
 
 /* Era legend */
-.era-legend{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:300;background:rgba(4,8,24,.88);backdrop-filter:blur(8px);border:1px solid var(--glass-border);border-radius:10px;padding:8px 16px;display:none;flex-wrap:wrap;gap:12px}
+.era-legend{
+  position:fixed;bottom:calc(var(--dock-h) + 16px);left:50%;transform:translateX(-50%);
+  z-index:300;background:rgba(4,8,24,.92);backdrop-filter:blur(12px);
+  border:1px solid rgba(77,159,255,.25);border-radius:12px;
+  padding:10px 18px;display:none;flex-wrap:wrap;gap:10px 16px;
+  max-width:min(96vw,560px);box-shadow:0 8px 30px rgba(0,0,0,.4)
+}
 .era-legend.visible{display:flex}
-.el-row{display:flex;align-items:center;gap:5px;font-size:.6rem;color:var(--mid)}
-.el-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.era-legend-title{width:100%;font-family:'Orbitron',sans-serif;font-size:.52rem;letter-spacing:.18em;color:rgba(77,159,255,.55);text-transform:uppercase;margin-bottom:2px}
+.el-row{display:flex;align-items:center;gap:5px;font-size:.62rem;color:var(--mid);white-space:nowrap}
+.el-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.el-row.active-era{color:#fff;font-weight:600}
 
 /* Watch status colours */
 .watch-yr{color:var(--accent)}
@@ -567,6 +638,82 @@ html,body{
   </div>
 </div>
 
+<!-- ══ FAMILY CONSTELLATION MODAL ══ -->
+<div id="family-modal">
+  <div class="family-box">
+    <button class="family-close" onclick="closeFamilyConstellation()">✕</button>
+
+    <!-- Tab bar -->
+    <div class="fm-tabs">
+      <button class="fm-tab active" id="fm-tab-map" onclick="fmSwitchTab('map')">🌌 Family Map</button>
+      <button class="fm-tab" id="fm-tab-lookup" onclick="fmSwitchTab('lookup')">🔭 Reverse Lookup</button>
+    </div>
+
+    <!-- ── TAB: FAMILY MAP ── -->
+    <div id="fm-tab-map-content">
+      <p class="family-sub">Enter your family members' full birth dates. We'll find which real star is receiving the light from each birth <em>right now</em> — and draw your unique constellation.</p>
+      <div id="fm-members">
+        <div class="fm-member-row">
+          <input class="fm-name-in" placeholder="Name (e.g. Mum)" maxlength="30"/>
+          <div class="fm-date-group">
+            <select class="fm-day-in"><option value="">DD</option></select>
+            <select class="fm-mon-in">
+              <option value="">Mon</option>
+              <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option>
+              <option value="4">Apr</option><option value="5">May</option><option value="6">Jun</option>
+              <option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option>
+              <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
+            </select>
+            <input class="fm-year-in" type="number" placeholder="YYYY" min="1800" max="2026"/>
+          </div>
+          <button class="fm-remove" onclick="fmRemoveRow(this)" title="Remove">✕</button>
+        </div>
+        <div class="fm-member-row">
+          <input class="fm-name-in" placeholder="Name (e.g. Dad)" maxlength="30"/>
+          <div class="fm-date-group">
+            <select class="fm-day-in"><option value="">DD</option></select>
+            <select class="fm-mon-in">
+              <option value="">Mon</option>
+              <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option>
+              <option value="4">Apr</option><option value="5">May</option><option value="6">Jun</option>
+              <option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option>
+              <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
+            </select>
+            <input class="fm-year-in" type="number" placeholder="YYYY" min="1800" max="2026"/>
+          </div>
+          <button class="fm-remove" onclick="fmRemoveRow(this)" title="Remove">✕</button>
+        </div>
+      </div>
+      <div class="fm-row-btns">
+        <button class="fm-add-btn" onclick="fmAddRow()">＋ Add person</button>
+        <button class="fm-go-btn" onclick="runFamilyConstellation()">Map Constellation ✦</button>
+      </div>
+      <div id="fm-error"></div>
+      <div id="fm-loading" style="display:none">🌌 Scanning the sky for your family's stars…</div>
+      <div id="fm-results" style="display:none">
+        <div id="fm-sky-wrap"><canvas id="fm-sky-canvas"></canvas></div>
+        <div class="fm-star-cards" id="fm-star-cards"></div>
+        <div class="fm-action-row">
+          <button class="fm-action-btn fm-3d-btn" onclick="showFamilyIn3D()">✦ Show in 3D</button>
+          <button class="fm-action-btn fm-cert-btn" onclick="downloadFamilyCertificate()">📜 Certificate</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: REVERSE LOOKUP ── -->
+    <div id="fm-tab-lookup-content" style="display:none">
+      <p class="family-sub">Type a star name or enter a distance in light-years — we'll tell you what year it's watching right now, what era that is, and what events it saw light leave Earth.</p>
+      <div class="rl-input-row">
+        <input class="rl-input" id="rl-query" placeholder="e.g. Vega, Sirius, Betelgeuse … or 25 ly" list="rl-datalist" autocomplete="off"/>
+        <datalist id="rl-datalist"></datalist>
+        <button class="rl-btn" onclick="runReverseLookup()">Look Up</button>
+      </div>
+      <div id="rl-result" style="display:none"></div>
+    </div>
+
+  </div>
+</div>
+
 <!-- SVG connector lines (drawn by JS) -->
 <svg id="connectors" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:395"></svg>
 
@@ -589,14 +736,9 @@ html,body{
   <button class="scene-btn" onclick="refocusScene()">Refocus</button>
 </div>
 
-<!-- Era legend -->
+<!-- Era legend — populated by buildEraLegend() -->
 <div class="era-legend" id="era-legend">
-  <div class="el-row"><div class="el-dot" style="background:#9b59b6"></div>Prehistoric</div>
-  <div class="el-row"><div class="el-dot" style="background:#e67e22"></div>Ancient</div>
-  <div class="el-row"><div class="el-dot" style="background:#3498db"></div>Classical</div>
-  <div class="el-row"><div class="el-dot" style="background:#e91e63"></div>Medieval</div>
-  <div class="el-row"><div class="el-dot" style="background:#27ae60"></div>Modern</div>
-  <div class="el-row"><div class="el-dot" style="background:#f1c40f"></div>Contemporary</div>
+  <div class="era-legend-title">Stars coloured by the era they are currently watching on Earth</div>
 </div>
 
 <!-- Cultural fragility bar (above dock) -->
@@ -663,6 +805,10 @@ html,body{
   <div class="dock-item" id="dock-letters" onclick="openStarLetters()" title="Star Letters">
     <div class="di-icon">✉️</div>
     <div class="di-label">Letters</div>
+  </div>
+  <div class="dock-item" id="dock-family" onclick="openFamilyConstellation()" title="Family Constellation">
+    <div class="di-icon">🌌</div>
+    <div class="di-label">Family</div>
   </div>
   <div class="dock-sep"></div>
   <div class="dock-item" id="dock-pdf" onclick="exportArchivePDF()" title="Export PDF">
@@ -1169,8 +1315,10 @@ function bindSceneEvents(canvas){
     _mouse3d.x=(e.clientX/window.innerWidth)*2-1;
     _mouse3d.y=-(e.clientY/window.innerHeight)*2+1;
     if(!_resultStars)return;
+    _raycaster.params.Points.threshold=Math.max(6,_cameraRadius*0.065);
+    _resultStars.updateMatrixWorld(true);
     _raycaster.setFromCamera(_mouse3d,_camera);
-    const hits=_raycaster.intersectObject(_resultStars);
+    const hits=_raycaster.intersectObject(_resultStars,false);
     if(hits.length){
       canvas.style.cursor='none';
       document.getElementById('cursor-ring').classList.add('hovering');
@@ -1376,6 +1524,8 @@ function renderSearchResults(stars,targetLY){
   _world.add(_focusLines);
 
   focusWorldPosition(focusX/stars.length,focusY/stars.length,focusZ/stars.length);
+  // If era mode is on, refresh the legend highlight for the new star set
+  if(_eraMode) highlightActiveLegendEras();
 
   // ── Ripple reveal: stars expand outward from origin ──
   const posAttr=geo.attributes.position;
@@ -1904,30 +2054,63 @@ function eraLabel(distLY){
 function buildEraLegend(){
   const container=document.getElementById('era-legend');
   if(!container)return;
-  container.innerHTML=ERA_BANDS.map(b=>
-    `<div class="el-row"><div class="el-dot" style="background:${b.hex}"></div>${b.label}</div>`
-  ).join('');
+  container.innerHTML=`<div class="era-legend-title">Stars coloured by the era they are currently watching on Earth</div>`
+    +ERA_BANDS.map(b=>`<div class="el-row" data-era="${b.label}"><div class="el-dot" style="background:${b.hex};box-shadow:0 0 5px ${b.hex}88"></div>${b.label}</div>`).join('');
+}
+
+function highlightActiveLegendEras(){
+  // Highlight which eras are actually present in current results
+  const presentEras=new Set(S.currentStars.map(s=>eraLabel(s.dist_ly)));
+  document.querySelectorAll('#era-legend .el-row').forEach(row=>{
+    row.classList.toggle('active-era',presentEras.has(row.dataset.era));
+  });
 }
 
 function toggleEraMode(){
   _eraMode=!_eraMode;
+
+  // Update dock button
   const btn=document.getElementById('dock-era');
   if(btn){
     btn.classList.toggle('active',_eraMode);
-    btn.title=_eraMode?'Era Mode ON — stars coloured by historical period':'Era Mode';
+    btn.querySelector('.di-icon').textContent=_eraMode?'🎨':'🏛';
+    btn.title=_eraMode?'Era Mode ON — click to turn off':'Era Mode';
   }
+
+  // Show/hide legend
   document.getElementById('era-legend').classList.toggle('visible',_eraMode);
-  // Tint background stars faintly in era mode
+
+  // Update star vertex colors IN PLACE — no ripple, instant swap
+  if(_resultStars&&_starData3d.length){
+    const colAttr=_resultStars.geometry.attributes.color;
+    if(colAttr){
+      _starData3d.forEach((sd,i)=>{
+        if(!sd||!sd.star)return;
+        const diff=Math.abs(sd.star.dist_ly-(S.currentLY||sd.star.dist_ly));
+        const brightness=diff<0.5?1:diff<2?0.8:0.6;
+        const rgb=_eraMode ? eraColor(sd.star.dist_ly) : spectralRGB(sd.star.spectral_type);
+        colAttr.array[i*3]  =rgb[0]*brightness;
+        colAttr.array[i*3+1]=rgb[1]*brightness;
+        colAttr.array[i*3+2]=rgb[2]*brightness;
+      });
+      colAttr.needsUpdate=true;
+    }
+  }
+
+  // Highlight which eras are present
+  if(_eraMode) highlightActiveLegendEras();
+
+  // Dim background stars in era mode so search stars pop
   if(_backgroundStars){
     _backgroundStars.traverse(obj=>{
-      if(obj.isMesh||obj.isPoints){
-        obj.material.opacity=_eraMode?0.48:undefined;
+      if(obj.isPoints){
+        obj.material.opacity=_eraMode?0.35:1;
         obj.material.needsUpdate=true;
       }
     });
   }
-  if(S.currentStars.length)renderSearchResults(S.currentStars,S.currentLY);
-  setDebugState('ok',{status:_eraMode?'era mode ON':'era mode OFF'});
+
+  setDebugState('ok',{status:_eraMode?'ERA MODE ON':'era mode off',eras:_eraMode?[...new Set(S.currentStars.map(s=>eraLabel(s.dist_ly)))].join(', '):'—'});
 }
 
 /* ════════ FIND IT TONIGHT ════════ */
@@ -2500,6 +2683,561 @@ if(navigator.geolocation&&navigator.geolocation.getCurrentPosition){
     S.userLat=pos.coords.latitude;S.userLon=pos.coords.longitude;
     fetchCity(S.userLat,S.userLon);
   },()=>{},{ enableHighAccuracy:false,timeout:8000 });
+}
+
+/* ════════ FAMILY CONSTELLATION ════════ */
+let _familyLineGroup=null;
+let _familyDotGroup=null;
+let _familyResults=[];
+
+const FM_COLORS=['#22d3a4','#4d9fff','#ffd700','#b060ff'];
+const FM_MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// Populate day selects on page load
+(function initDaySelects(){
+  document.querySelectorAll('.fm-day-in').forEach(sel=>{
+    for(let d=1;d<=31;d++) sel.add(new Option(d,d));
+  });
+})();
+
+function fmSwitchTab(tab){
+  document.getElementById('fm-tab-map').classList.toggle('active',tab==='map');
+  document.getElementById('fm-tab-lookup').classList.toggle('active',tab==='lookup');
+  document.getElementById('fm-tab-map-content').style.display=tab==='map'?'':'none';
+  document.getElementById('fm-tab-lookup-content').style.display=tab==='lookup'?'':'none';
+  if(tab==='lookup') populateRLDatalist();
+}
+
+function openFamilyConstellation(){
+  document.getElementById('family-modal').classList.add('open');
+  document.getElementById('fm-results').style.display='none';
+  document.getElementById('fm-loading').style.display='none';
+  document.getElementById('fm-error').style.display='none';
+  fmSwitchTab('map');
+  _familyResults=[];
+}
+
+function closeFamilyConstellation(){
+  document.getElementById('family-modal').classList.remove('open');
+  clearFamilyFrom3D();
+}
+
+function _makeDateRow(name1='',name2=''){
+  const dayOpts=Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');
+  const monOpts=FM_MONTHS.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
+  return `<div class="fm-member-row">
+    <input class="fm-name-in" placeholder="${name1}" maxlength="30"/>
+    <div class="fm-date-group">
+      <select class="fm-day-in"><option value="">DD</option>${dayOpts}</select>
+      <select class="fm-mon-in"><option value="">Mon</option>${monOpts}</select>
+      <input class="fm-year-in" type="number" placeholder="YYYY" min="1800" max="2026"/>
+    </div>
+    <button class="fm-remove" onclick="fmRemoveRow(this)" title="Remove">✕</button>
+  </div>`;
+}
+
+function fmAddRow(){
+  const container=document.getElementById('fm-members');
+  if(container.children.length>=4)return;
+  const div=document.createElement('div');
+  div.innerHTML=_makeDateRow('Name');
+  container.appendChild(div.firstElementChild);
+}
+
+function fmRemoveRow(btn){
+  const container=document.getElementById('fm-members');
+  if(container.children.length<=1)return;
+  btn.closest('.fm-member-row').remove();
+}
+
+// Compute precise light-years from a date (day optional)
+function _targetLYFromDate(year,month,day){
+  if(month&&day){
+    const now=new Date();
+    const birthDate=new Date(year,month-1,day);
+    const ageYears=(now-birthDate)/(365.25*24*3600*1000);
+    return Math.max(0.5,ageYears);
+  }
+  return Math.max(0.5,CURRENT_YEAR-year);
+}
+
+async function runFamilyConstellation(){
+  const rows=[...document.querySelectorAll('#fm-members .fm-member-row')];
+  const members=rows.map(r=>({
+    name:(r.querySelector('.fm-name-in').value||'').trim()||'Person',
+    year:parseInt(r.querySelector('.fm-year-in').value)||null,
+    month:parseInt(r.querySelector('.fm-mon-in').value)||null,
+    day:parseInt(r.querySelector('.fm-day-in').value)||null
+  })).filter(m=>m.year&&m.year>=1800&&m.year<=CURRENT_YEAR);
+
+  const errEl=document.getElementById('fm-error');
+  errEl.style.display='none';
+  if(!members.length){
+    errEl.textContent='Please enter at least one birth year.';
+    errEl.style.display='block';
+    return;
+  }
+
+  document.getElementById('fm-loading').style.display='block';
+  document.getElementById('fm-results').style.display='none';
+
+  try{
+    const resolved=await Promise.all(members.map(async(m,i)=>{
+      const targetLY=_targetLYFromDate(m.year,m.month,m.day);
+      const tol=targetLY<20?0.5:targetLY<60?0.3:0.2;
+      const resp=await fetch(`/api/stars?light_years=${targetLY.toFixed(2)}&tolerance=${tol}`);
+      const data=await resp.json();
+      const stars=data.stars||[];
+
+      // Pick closest match
+      let best=null,bestDiff=Infinity;
+      for(const s of stars){
+        const diff=Math.abs((s.dist_ly||0)-targetLY);
+        if(diff<bestDiff){bestDiff=diff;best=s;}
+      }
+      // Deterministic fallback — seed RA/Dec from birth year so it's consistent
+      if(!best||bestDiff>targetLY*0.6){
+        const seed=(m.year*397+i*137)%360;
+        best={
+          name:`${m.name}'s Birth Star`,
+          dist_ly:targetLY,
+          ra:seed,
+          dec:(((m.year*53+i*31)%120)-60),
+          spectral_type:'G',
+          constellation:'—',
+          id:`synth_${i}`
+        };
+      }
+
+      // Sky position
+      let sky=null;
+      if(S.userLat!==null&&S.userLon!==null&&best.ra!=null&&best.dec!=null){
+        try{
+          const sp=await fetch(`/api/sky-position?ra=${best.ra}&dec=${best.dec}&lat=${S.userLat}&lon=${S.userLon}&year=${m.year}&dist_ly=${best.dist_ly}`);
+          sky=await sp.json();
+        }catch{}
+      }
+
+      const dateLabel=m.day&&m.month?`${m.day} ${FM_MONTHS[m.month-1]} ${m.year}`:`${m.year}`;
+      return {member:{...m,dateLabel},star:best,sky,color:FM_COLORS[i%FM_COLORS.length],targetLY};
+    }));
+
+    _familyResults=resolved;
+    document.getElementById('fm-loading').style.display='none';
+    renderFamilyResults(resolved);
+  }catch(e){
+    console.error('Family constellation error',e);
+    document.getElementById('fm-loading').style.display='none';
+    errEl.textContent='Could not load star data. Please try again.';
+    errEl.style.display='block';
+  }
+}
+
+function _skyDirectionTip(sky){
+  if(!sky) return `<span style="color:var(--dim)">Enable location for tonight's directions</span>`;
+  if(sky.visible_now){
+    const alt=(sky.alt_now||0).toFixed(0);
+    const heightDesc=alt>60?'high overhead':alt>30?'about a third up the sky':alt>10?'low on the horizon':'very low — needs a clear horizon';
+    return `<span style="color:#22d3a4">▲ Visible right now</span><br>Face <strong style="color:#fff">${sky.compass}</strong>, look <strong>${alt}°</strong> up — ${heightDesc}.`;
+  }else if((sky.best_alt||0)>0){
+    const alt=(sky.best_alt||0).toFixed(0);
+    return `Rises tonight — best at <strong style="color:#fff">${sky.best_compass}</strong>, <strong>${alt}°</strong> up around <strong>${sky.best_time_utc||'?'} UTC</strong>.`;
+  }
+  return `<span style="color:var(--dim)">Below the horizon tonight from your location</span>`;
+}
+
+function renderFamilyResults(results){
+  document.getElementById('fm-results').style.display='block';
+  drawFamilySkyCanvas(results);
+
+  document.getElementById('fm-star-cards').innerHTML=results.map((r)=>{
+    const dist=r.star.dist_ly;
+    const preciseDist=dist.toLocaleString(undefined,{maximumFractionDigits:1});
+    const tip=_skyDirectionTip(r.sky);
+    return `<div class="fm-star-card">
+      <div class="fm-star-dot" style="background:${r.color};box-shadow:0 0 10px ${r.color}70;margin-top:4px"></div>
+      <div class="fm-star-info">
+        <div class="fm-star-person">${r.member.name} · born ${r.member.dateLabel}</div>
+        <div class="fm-star-name">${r.star.name}</div>
+        <div class="fm-star-dist">${preciseDist} ly · ${r.star.spectral_type||'?'}-type · ${r.star.constellation||'—'}</div>
+        <div class="fm-find-tip">${tip}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function drawFamilySkyCanvas(results){
+  const canvas=document.getElementById('fm-sky-canvas');
+  const W=canvas.offsetWidth||520;
+  const H=210;
+  canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');
+
+  // Sky gradient
+  const bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#010510');bg.addColorStop(0.65,'#05101e');bg.addColorStop(1,'#0c1a08');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+  // Milky Way suggestion (faint band)
+  const mw=ctx.createLinearGradient(0,H*0.15,0,H*0.85);
+  mw.addColorStop(0,'transparent');mw.addColorStop(0.5,'rgba(120,140,200,.07)');mw.addColorStop(1,'transparent');
+  ctx.fillStyle=mw;ctx.fillRect(W*0.3,0,W*0.4,H);
+
+  // Background stars
+  let rng=31337;
+  const rr=()=>{rng=(rng*1664525+1013904223)&0xffffffff;return(rng>>>0)/0xffffffff;};
+  for(let i=0;i<90;i++){
+    const sx=rr()*W,sy=rr()*(H-24);
+    const a=rr()*.55+.08;
+    ctx.beginPath();ctx.arc(sx,sy,rr()*.7+.2,0,Math.PI*2);
+    ctx.fillStyle=`rgba(200,215,255,${a})`;ctx.fill();
+  }
+
+  // Horizon
+  ctx.strokeStyle='rgba(34,211,164,.3)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,H-22);ctx.lineTo(W,H-22);ctx.stroke();
+  const hg=ctx.createLinearGradient(0,H-22,0,H);
+  hg.addColorStop(0,'rgba(34,211,164,.06)');hg.addColorStop(1,'transparent');
+  ctx.fillStyle=hg;ctx.fillRect(0,H-22,W,22);
+
+  // Compass labels
+  ctx.font='bold 8px Orbitron,sans-serif';ctx.fillStyle='rgba(34,211,164,.55)';
+  const compassPts=[['N',0],['NE',45],['E',90],['SE',135],['S',180],['SW',225],['W',270],['NW',315]];
+  compassPts.forEach(([lbl,az])=>{
+    const x=(((az+180)%360)/360)*W;
+    ctx.textAlign='center';ctx.fillText(lbl,x,H-7);
+  });
+
+  // Helper: az/alt → canvas x,y
+  const toXY=(az,alt)=>{
+    const x=(((az+180)%360)/360)*W;
+    const y=(H-22)-(Math.max(0,alt)/90)*(H-32);
+    return[x,y];
+  };
+
+  // Draw constellation lines first (behind stars)
+  const plotted=[];
+  results.forEach(r=>{
+    if(!r.sky)return;
+    const useNow=r.sky.visible_now;
+    const alt=useNow?r.sky.alt_now:(r.sky.best_alt||0);
+    if(alt<-15)return;
+    const az=useNow?r.sky.az_now:(r.sky.best_az||0);
+    const[px,py]=toXY(az,Math.max(alt,1.5));
+    plotted.push({px,py,r});
+  });
+
+  if(plotted.length>1){
+    ctx.setLineDash([5,6]);ctx.lineWidth=1;
+    for(let i=0;i<plotted.length-1;i++){
+      const a=plotted[i],b=plotted[i+1];
+      ctx.beginPath();ctx.moveTo(a.px,a.py);ctx.lineTo(b.px,b.py);
+      ctx.strokeStyle='rgba(200,220,255,.2)';ctx.stroke();
+    }
+    if(plotted.length>=3){
+      const a=plotted[plotted.length-1],b=plotted[0];
+      ctx.beginPath();ctx.moveTo(a.px,a.py);ctx.lineTo(b.px,b.py);
+      ctx.strokeStyle='rgba(200,220,255,.14)';ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+
+  // Draw stars on top
+  plotted.forEach(({px,py,r})=>{
+    // Glow ring
+    const grd=ctx.createRadialGradient(px,py,0,px,py,18);
+    grd.addColorStop(0,r.color+'50');grd.addColorStop(1,'transparent');
+    ctx.fillStyle=grd;ctx.beginPath();ctx.arc(px,py,18,0,Math.PI*2);ctx.fill();
+    // Core dot
+    ctx.beginPath();ctx.arc(px,py,4.5,0,Math.PI*2);ctx.fillStyle=r.color;ctx.fill();
+    ctx.beginPath();ctx.arc(px,py,2,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
+    // Name label
+    ctx.font='bold 10px Inter,sans-serif';ctx.fillStyle=r.color;ctx.textAlign='center';
+    ctx.fillText(r.member.name,px,py-13);
+    if(!r.sky.visible_now&&(r.sky.best_alt||0)>0){
+      ctx.font='9px Inter,sans-serif';ctx.fillStyle='rgba(200,200,255,.5)';
+      ctx.fillText('(best time)',px,py+16);
+    }
+  });
+
+  // Note if some are off-horizon
+  const hidden=results.filter(r=>{
+    if(!r.sky)return true;
+    const alt=r.sky.visible_now?r.sky.alt_now:(r.sky.best_alt||0);
+    return alt<-15;
+  }).length;
+  if(hidden>0){
+    ctx.font='9px Inter,sans-serif';ctx.fillStyle='rgba(180,180,200,.4)';ctx.textAlign='right';
+    ctx.fillText(`${hidden} star${hidden>1?'s':''} not visible tonight`,W-8,H-8);
+  }
+}
+
+function showFamilyIn3D(){
+  if(!_scene||!_world){
+    alert('3D scene is not ready yet. Wait a moment and try again.');
+    return;
+  }
+  if(!_familyResults.length){
+    alert('No family stars to show. Map the constellation first.');
+    return;
+  }
+  clearFamilyFrom3D();
+
+  const dotGroup=new THREE.Group();
+  const positions=[];
+
+  _familyResults.forEach((r,i)=>{
+    // Use deterministic fallback position if ra/dec missing or both zero
+    const ra=((r.star.ra!=null)?r.star.ra:((i*137+23)%360))*(Math.PI/180);
+    const dec=((r.star.dec!=null)?r.star.dec:((i*53+10)%120)-60)*(Math.PI/180);
+    const radius=180+i*12; // stagger slightly so they don't overlap
+    const x=radius*Math.cos(dec)*Math.cos(ra);
+    const y=radius*Math.sin(dec);
+    const z=-radius*Math.cos(dec)*Math.sin(ra);
+    positions.push({x,y,z,color:r.color,name:r.member.name});
+
+    const col=new THREE.Color(r.color);
+
+    // Core dot (pixel-space, always visible)
+    const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array([x,y,z]),3));
+    const mat=new THREE.PointsMaterial({size:14,sizeAttenuation:false,color:col,transparent:true,opacity:1,depthWrite:false,blending:THREE.AdditiveBlending});
+    dotGroup.add(new THREE.Points(geo,mat));
+
+    // Halo glow (world-space)
+    const geo2=new THREE.BufferGeometry();
+    geo2.setAttribute('position',new THREE.BufferAttribute(new Float32Array([x,y,z]),3));
+    const glowMap=_glowTexWhite||null;
+    const mat2=new THREE.PointsMaterial({size:28,sizeAttenuation:false,color:col,transparent:true,opacity:0.38,depthWrite:false,blending:THREE.AdditiveBlending,...(glowMap?{map:glowMap}:{})});
+    dotGroup.add(new THREE.Points(geo2,mat2));
+  });
+
+  _world.add(dotGroup);
+  _familyDotGroup=dotGroup;
+
+  // Constellation lines
+  if(positions.length>1){
+    const verts=[];
+    for(let i=0;i<positions.length-1;i++){
+      const a=positions[i],b=positions[i+1];
+      verts.push(a.x,a.y,a.z,b.x,b.y,b.z);
+    }
+    if(positions.length>=3){
+      const a=positions[positions.length-1],b=positions[0];
+      verts.push(a.x,a.y,a.z,b.x,b.y,b.z);
+    }
+    const lineGeo=new THREE.BufferGeometry();
+    lineGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(verts),3));
+    const lineMat=new THREE.LineBasicMaterial({color:0x22d3a4,transparent:true,opacity:0.45,depthWrite:false,blending:THREE.AdditiveBlending});
+    const lines=new THREE.LineSegments(lineGeo,lineMat);
+    _world.add(lines);
+    _familyLineGroup=lines;
+  }
+
+  // Pan camera to centroid
+  const cx=positions.reduce((s,p)=>s+p.x,0)/positions.length;
+  const cy=positions.reduce((s,p)=>s+p.y,0)/positions.length;
+  const cz=positions.reduce((s,p)=>s+p.z,0)/positions.length;
+  if(_targetCameraTarget){_targetCameraTarget.set(cx*0.35,cy*0.35,cz*0.35);}
+  _targetRadius=210;
+
+  closeFamilyConstellation();
+}
+
+function clearFamilyFrom3D(){
+  if(_familyLineGroup&&_world){
+    _world.remove(_familyLineGroup);
+    if(_familyLineGroup.geometry)_familyLineGroup.geometry.dispose();
+    if(_familyLineGroup.material)_familyLineGroup.material.dispose();
+    _familyLineGroup=null;
+  }
+  if(_familyDotGroup&&_world){
+    _familyDotGroup.children.forEach(c=>{
+      if(c.geometry)c.geometry.dispose();
+      if(c.material)c.material.dispose();
+    });
+    _world.remove(_familyDotGroup);
+    _familyDotGroup=null;
+  }
+}
+
+/* ── FAMILY CERTIFICATE ── */
+function downloadFamilyCertificate(){
+  if(!_familyResults.length)return;
+  const W=700,H=460;
+  const cv=document.createElement('canvas');
+  cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+
+  // Background
+  const bg=ctx.createLinearGradient(0,0,W,H);
+  bg.addColorStop(0,'#020610');bg.addColorStop(.5,'#060e22');bg.addColorStop(1,'#040818');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+  // Stars
+  let rng=(_familyResults[0].member.year||2000)*397;
+  const rr=()=>{rng=(rng*1664525+1013904223)&0xffffffff;return(rng>>>0)/0xffffffff;};
+  for(let i=0;i<250;i++){
+    const sx=rr()*W,sy=rr()*H,sz=rr()*.8+.1;
+    ctx.beginPath();ctx.arc(sx,sy,sz,0,Math.PI*2);
+    ctx.fillStyle=`rgba(200,215,255,${rr()*.6+.1})`;ctx.fill();
+  }
+
+  // Border
+  ctx.strokeStyle='rgba(34,211,164,.55)';ctx.lineWidth=1.5;
+  ctx.strokeRect(14,14,W-28,H-28);
+  ctx.strokeStyle='rgba(34,211,164,.22)';ctx.lineWidth=1;
+  ctx.strokeRect(22,22,W-44,H-44);
+
+  ctx.textAlign='center';
+
+  // Header
+  ctx.font='bold 11px Orbitron,sans-serif';ctx.fillStyle='rgba(34,211,164,.7)';
+  ctx.fillText('SIRIUS — FAMILY CONSTELLATION CERTIFICATE',W/2,50);
+
+  ctx.font='900 28px Orbitron,sans-serif';
+  ctx.fillStyle='#fff';
+  ctx.fillText('The Stars of Our Family',W/2,92);
+
+  ctx.strokeStyle='rgba(34,211,164,.2)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(60,108);ctx.lineTo(W-60,108);ctx.stroke();
+
+  // Subtitle
+  ctx.font='13px Inter,sans-serif';ctx.fillStyle='rgba(200,220,255,.6)';
+  const today=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  ctx.fillText(`These stars are receiving the light from each birth right now · ${today}`,W/2,130);
+
+  // Sky canvas mini (shrunk)
+  const skyCv=document.getElementById('fm-sky-canvas');
+  const skyW=300,skyH=100;
+  const skyX=(W-skyW)/2,skyY=148;
+  ctx.save();
+  ctx.beginPath();ctx.roundRect(skyX,skyY,skyW,skyH,8);ctx.clip();
+  ctx.drawImage(skyCv,skyX,skyY,skyW,skyH);
+  ctx.restore();
+  ctx.strokeStyle='rgba(34,211,164,.25)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.roundRect(skyX,skyY,skyW,skyH,8);ctx.stroke();
+
+  // Member list
+  const listY=268;
+  const colW=W/Math.max(_familyResults.length,1);
+  _familyResults.forEach((r,i)=>{
+    const cx2=colW*(i+0.5);
+    // Colour dot
+    ctx.beginPath();ctx.arc(cx2,listY,6,0,Math.PI*2);
+    ctx.fillStyle=r.color;ctx.fill();
+    // Name
+    ctx.font='bold 11px Orbitron,sans-serif';ctx.fillStyle=r.color;
+    ctx.fillText(r.member.name,cx2,listY+20);
+    // Date
+    ctx.font='10px Space Mono,sans-serif';ctx.fillStyle='rgba(200,220,255,.55)';
+    ctx.fillText(`Born ${r.member.dateLabel}`,cx2,listY+36);
+    // Star name
+    ctx.font='bold 13px Inter,sans-serif';ctx.fillStyle='#ffd700';
+    ctx.fillText(r.star.name,cx2,listY+56);
+    // Distance
+    ctx.font='9px Space Mono,sans-serif';ctx.fillStyle='rgba(120,160,200,.7)';
+    ctx.fillText(`${r.star.dist_ly.toFixed(1)} light-years`,cx2,listY+70);
+    // Sky tip
+    const sky=r.sky;
+    if(sky&&sky.visible_now){
+      ctx.font='9px Inter,sans-serif';ctx.fillStyle='rgba(34,211,164,.75)';
+      ctx.fillText(`▲ ${sky.compass} · ${(sky.alt_now||0).toFixed(0)}° up`,cx2,listY+86);
+    }else if(sky&&(sky.best_alt||0)>0){
+      ctx.font='9px Inter,sans-serif';ctx.fillStyle='rgba(77,159,255,.6)';
+      ctx.fillText(`Best: ${sky.best_compass} · ${(sky.best_alt||0).toFixed(0)}°`,cx2,listY+86);
+    }
+  });
+
+  // Divider
+  ctx.strokeStyle='rgba(34,211,164,.15)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(60,H-70);ctx.lineTo(W-60,H-70);ctx.stroke();
+
+  // Footer
+  ctx.font='italic 11px Inter,sans-serif';ctx.fillStyle='rgba(200,220,255,.35)';
+  ctx.fillText('"The light from each of these births has been crossing space ever since. Nothing can stop it."',W/2,H-50);
+  ctx.font='9px Orbitron,sans-serif';ctx.fillStyle='rgba(34,211,164,.35)';
+  ctx.fillText('SIRIUS · Codebrew 2026',W/2,H-30);
+
+  // Download
+  const a=document.createElement('a');
+  a.download='family-constellation.png';
+  a.href=cv.toDataURL('image/png');
+  a.click();
+}
+
+/* ── REVERSE LOOKUP ── */
+let _rlStarList=[];
+
+async function populateRLDatalist(){
+  if(_rlStarList.length)return;
+  try{
+    const r=await fetch('/api/stars?light_years=50&tolerance=0.98');
+    const d=await r.json();
+    _rlStarList=(d.stars||[]).map(s=>s.name).filter(Boolean);
+    const dl=document.getElementById('rl-datalist');
+    dl.innerHTML=_rlStarList.map(n=>`<option value="${n}"></option>`).join('');
+  }catch{}
+}
+
+async function runReverseLookup(){
+  const q=(document.getElementById('rl-query').value||'').trim();
+  if(!q)return;
+  const resultEl=document.getElementById('rl-result');
+  resultEl.style.display='none';
+  resultEl.innerHTML='<div style="color:var(--mid);font-size:.78rem;padding:12px 0">Searching…</div>';
+  resultEl.style.display='block';
+
+  try{
+    let star=null;
+    // If it looks like a number, treat it as ly directly
+    const asNum=parseFloat(q);
+    if(!isNaN(asNum)&&asNum>0){
+      const r=await fetch(`/api/stars?light_years=${asNum.toFixed(2)}&tolerance=0.15`);
+      const d=await r.json();
+      const stars=d.stars||[];
+      if(stars.length){
+        let best=stars[0],bDiff=Infinity;
+        stars.forEach(s=>{const diff=Math.abs((s.dist_ly||0)-asNum);if(diff<bDiff){bDiff=diff;best=s;}});
+        star=best;
+      }
+      if(!star) star={name:`${asNum.toFixed(1)} ly — unnamed region`,dist_ly:asNum,spectral_type:'?',constellation:'—'};
+    } else {
+      // Try fetching by name: search for it via year-range approach
+      // First try: check if it's a named star in our catalog via a broad search
+      const r=await fetch(`/api/stars?light_years=100&tolerance=0.99`);
+      const d=await r.json();
+      star=(d.stars||[]).find(s=>(s.name||'').toLowerCase()===q.toLowerCase());
+      if(!star){
+        // Try partial match
+        star=(d.stars||[]).find(s=>(s.name||'').toLowerCase().includes(q.toLowerCase()));
+      }
+      if(!star){
+        resultEl.innerHTML=`<div style="color:#ff8b8b;font-size:.78rem;padding:8px">No star found matching "${q}". Try a distance in light-years (e.g. 8.6) or a well-known star name like Sirius, Vega, Betelgeuse.</div>`;
+        return;
+      }
+    }
+
+    const watchingYear=Math.round(CURRENT_YEAR-star.dist_ly);
+    const eraRGB=eraColor(star.dist_ly);
+    const eraHex=`rgb(${Math.round(eraRGB[0]*255)},${Math.round(eraRGB[1]*255)},${Math.round(eraRGB[2]*255)})`;
+    const eraTxt=eraLabel(star.dist_ly);
+    const yearStr=watchingYear<0?`${Math.abs(watchingYear)} BCE`:`${watchingYear} CE`;
+
+    resultEl.innerHTML=`<div class="rl-card">
+      <div class="rl-star-name">${star.name}</div>
+      <div class="rl-watching">${star.dist_ly.toLocaleString(undefined,{maximumFractionDigits:1})} light-years away · ${star.spectral_type||'?'}-type · ${star.constellation||'—'}</div>
+      <div style="font-size:.72rem;color:var(--mid);margin-bottom:8px">Right now, <strong style="color:#fff">${star.name}</strong> is receiving the light that left Earth in:</div>
+      <div class="rl-year-big">${yearStr}</div>
+      <div><span class="rl-era" style="background:${eraHex}22;border:1px solid ${eraHex}66;color:${eraHex}">${eraTxt}</span></div>
+      <div style="font-size:.72rem;color:var(--mid);line-height:1.7;margin-top:6px">
+        ${watchingYear>0?`The light leaving Earth in <strong>${yearStr}</strong> has been traveling for ${Math.round(star.dist_ly).toLocaleString()} years. It is arriving at ${star.name} for the very first time.`:`This star is so close (${star.dist_ly.toFixed(1)} ly) it's watching Earth from only ${Math.round(star.dist_ly)} years ago.`}
+      </div>
+      <button class="rl-search-btn" onclick="closeFamilyConstellation();searchStars(${watchingYear},'${star.name} is watching','Star lookup',${star.dist_ly})">Search ${yearStr} events in the main view ✦</button>
+    </div>`;
+  }catch(e){
+    resultEl.innerHTML=`<div style="color:#ff8b8b;font-size:.78rem">Error fetching data. Please try again.</div>`;
+  }
 }
 
 /* ════════ KEYBOARD SHORTCUTS ════════ */
