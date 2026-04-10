@@ -1742,8 +1742,8 @@ document.querySelectorAll('.mode-tab').forEach(t=>t.addEventListener('click',()=
   S.mode=t.dataset.mode;
   document.getElementById('discovery-section').style.display=S.mode==='discovery'?'block':'none';
   document.getElementById('results-section').style.display=S.mode==='discovery'&&S.currentLY?'block':'none';
-  document.getElementById('compare-section').className='compare-section'+(S.mode==='compare'?' active':'');
-  document.getElementById('reverse-section').className='reverse-section'+(S.mode==='reverse'?' active':'');
+  document.getElementById('compare-section').style.display=S.mode==='compare'?'block':'none';
+  document.getElementById('reverse-section').style.display=S.mode==='reverse'?'block':'none';
   if(S.mode==='reverse')buildReverseGrid();
 }));
 
@@ -2345,7 +2345,7 @@ async function runCompare(side){
         <span class="cs-dist" style="color:${col}">${s.dist_ly} ly</span>
       </div>`).join('');
     chime(side==='left'?660:880);
-  }catch{starsBox.innerHTML='<div style="color:var(--dim);padding:10px;font-size:.8rem">Error fetching stars.</div>';}
+  }catch{starsBox.innerHTML="<div style='color':var(--dim);padding:10px;font-size:'.8rem'>Error fetching stars.</div>";}
 }
 
 /* ════════════════════════════════════════════════════
