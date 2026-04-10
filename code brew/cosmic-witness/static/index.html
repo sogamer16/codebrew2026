@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Sirius — The Sky Is a Time Machine</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-<script src="/static/three.min.js?v=20260410-1758"></script>
+<script src="/static/three.min.js?v=1775811828"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -447,6 +447,43 @@ html,body{
 .fb-stat{font-size:.74rem;color:var(--text);line-height:1.6}
 .fb-stat em{color:rgba(255,107,107,.85);font-style:normal;font-weight:600}
 
+/* ══ FIND IT TONIGHT ══ */
+#fit-modal{display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);align-items:center;justify-content:center}
+#fit-modal.open{display:flex}
+.fit-box{background:rgba(4,8,24,.96);border:1px solid rgba(77,159,255,.28);border-radius:22px;padding:28px 30px;max-width:480px;width:92%;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.fit-title{font-family:'Orbitron',sans-serif;font-size:.9rem;letter-spacing:.15em;color:var(--accent);margin-bottom:18px;text-transform:uppercase}
+.fit-close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--dim);font-size:1.1rem;cursor:pointer}
+.fit-sky{width:100%;height:200px;border-radius:14px;background:radial-gradient(ellipse at 50% 110%,#0a1a35 0%,#020812 60%,#000 100%);position:relative;overflow:hidden;margin:14px 0;border:1px solid rgba(77,159,255,.12)}
+.fit-horizon{position:absolute;bottom:0;left:0;right:0;height:32%;background:linear-gradient(to top,rgba(6,20,50,.9),transparent);border-top:1px solid rgba(77,159,255,.18)}
+.fit-star-dot{position:absolute;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle,#fff 0%,rgba(77,159,255,.8) 45%,transparent 100%);transform:translate(-50%,-50%);box-shadow:0 0 12px 4px rgba(77,159,255,.5);transition:all .8s cubic-bezier(.16,1,.3,1)}
+.fit-compass{width:14px;height:14px;border-radius:50%;background:#fff;position:absolute;bottom:8px;transform:translateX(-50%);box-shadow:0 0 8px rgba(255,255,255,.6)}
+.fit-stat{font-size:.78rem;color:var(--text);line-height:1.8}
+.fit-stat strong{color:#fff}
+.fit-stat .fit-dir{font-family:'Orbitron',sans-serif;font-size:1.1rem;color:var(--accent);letter-spacing:.1em}
+.fit-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;font-family:'Orbitron',sans-serif;margin-bottom:10px}
+.fit-badge.visible{background:rgba(34,211,164,.12);border:1px solid rgba(34,211,164,.35);color:#22d3a4}
+.fit-badge.hidden{background:rgba(255,107,107,.1);border:1px solid rgba(255,107,107,.3);color:rgba(255,107,107,.8)}
+.fit-input-row{display:flex;gap:10px;margin-bottom:16px;align-items:center}
+.fit-input{flex:1;padding:10px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:var(--text);font-family:'Space Mono',monospace;font-size:.82rem;outline:none}
+.fit-btn{padding:10px 20px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;color:#fff;font-family:'Orbitron',sans-serif;font-size:.7rem;cursor:pointer;letter-spacing:.06em;white-space:nowrap}
+
+/* ══ STAR LETTERS ══ */
+#letters-modal{display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);align-items:center;justify-content:center}
+#letters-modal.open{display:flex}
+.letters-box{background:rgba(4,8,24,.96);border:1px solid rgba(176,96,255,.25);border-radius:22px;padding:28px 30px;max-width:500px;width:92%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.letters-title{font-family:'Orbitron',sans-serif;font-size:.9rem;letter-spacing:.15em;color:var(--accent2);margin-bottom:6px;text-transform:uppercase}
+.letters-sub{font-size:.7rem;color:var(--dim);margin-bottom:18px;line-height:1.6}
+.letters-close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--dim);font-size:1.1rem;cursor:pointer}
+.letter-card{background:rgba(255,255,255,.03);border:1px solid rgba(176,96,255,.12);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.letter-author{font-size:.62rem;letter-spacing:.1em;color:var(--accent2);text-transform:uppercase;margin-bottom:5px;font-family:'Orbitron',sans-serif}
+.letter-msg{font-size:.78rem;color:var(--text);line-height:1.65;font-style:italic}
+.letter-meta{font-size:.58rem;color:var(--dim);margin-top:6px}
+.letter-form{margin-top:18px;border-top:1px solid rgba(255,255,255,.06);padding-top:18px}
+.letter-form textarea{width:100%;padding:12px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(176,96,255,.2);border-radius:10px;color:var(--text);font-size:.78rem;font-family:'Inter',sans-serif;outline:none;resize:vertical;min-height:80px}
+.letter-form input{width:100%;padding:9px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--text);font-size:.78rem;font-family:'Inter',sans-serif;outline:none;margin-bottom:8px}
+.letter-submit{width:100%;padding:11px;background:linear-gradient(135deg,#7b2fff,#b060ff);border:none;border-radius:10px;color:#fff;font-family:'Orbitron',sans-serif;font-size:.72rem;letter-spacing:.08em;cursor:pointer;margin-top:10px}
+.letters-empty{text-align:center;padding:28px 0;color:var(--dim);font-size:.78rem}
+
 /* ══ PDF EXPORT / MISC BUTTONS ══ */
 .pdf-export-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(255,215,0,.07);border:1px solid rgba(255,215,0,.25);border-radius:9px;color:var(--gold);font-size:.72rem;cursor:pointer;font-family:'Orbitron',sans-serif;letter-spacing:.06em;transition:all .2s}
 .pdf-export-btn:hover{background:rgba(255,215,0,.13);box-shadow:0 0 18px rgba(255,215,0,.12)}
@@ -490,6 +527,44 @@ html,body{
   <div class="td-row"><span class="td-key">bg stars</span><span class="td-val" id="dbg-stars">0</span></div>
   <div class="td-row"><span class="td-key">frame</span><span class="td-val" id="dbg-frame">idle</span></div>
   <div class="td-row"><span class="td-key">status</span><span class="td-val" id="dbg-status">booting</span></div>
+</div>
+
+<!-- ══ FIND IT TONIGHT MODAL ══ -->
+<div id="fit-modal">
+  <div class="fit-box">
+    <button class="fit-close" onclick="closeFindItTonight()">✕</button>
+    <div class="fit-title">🔭 Find It Tonight</div>
+    <p style="font-size:.72rem;color:var(--dim);margin-bottom:14px;line-height:1.6">Enter any year or event date — we'll show you exactly where in tonight's sky to look to see the star receiving that light right now.</p>
+    <div class="fit-input-row">
+      <input class="fit-input" id="fit-year" type="number" placeholder="Year (e.g. 1969)" min="-10000" max="2025"/>
+      <button class="fit-btn" onclick="runFindItTonight()">Find</button>
+    </div>
+    <div id="fit-result" style="display:none">
+      <div id="fit-badge" class="fit-badge visible">Visible Now</div>
+      <div class="fit-sky" id="fit-sky">
+        <div class="fit-horizon"></div>
+        <div class="fit-star-dot" id="fit-star-dot"></div>
+        <canvas id="fit-sky-canvas" style="position:absolute;inset:0;width:100%;height:100%;opacity:.4;pointer-events:none"></canvas>
+      </div>
+      <div class="fit-stat" id="fit-stat"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ STAR LETTERS MODAL ══ -->
+<div id="letters-modal">
+  <div class="letters-box">
+    <button class="letters-close" onclick="closeStarLetters()">✕</button>
+    <div class="letters-title">✉️ Star Letters</div>
+    <div class="letters-sub" id="letters-sub">Messages left on this star across time. Future visitors will find yours here.</div>
+    <div id="letters-list"></div>
+    <div class="letter-form">
+      <input id="letter-author" placeholder="Your name (optional)" maxlength="60"/>
+      <input id="letter-year" placeholder="The year you're writing about (optional)" maxlength="20"/>
+      <textarea id="letter-msg" placeholder="Write your letter to whoever finds this star next…" maxlength="1000"></textarea>
+      <button class="letter-submit" onclick="submitLetter()">Leave Your Letter on This Star ✦</button>
+    </div>
+  </div>
 </div>
 
 <!-- SVG connector lines (drawn by JS) -->
@@ -580,6 +655,14 @@ html,body{
   <div class="dock-item" id="dock-moment" onclick="openModal('custom')" title="Add Moment">
     <div class="di-icon">＋</div>
     <div class="di-label">Add Moment</div>
+  </div>
+  <div class="dock-item" id="dock-tonight" onclick="openFindItTonight()" title="Find It Tonight">
+    <div class="di-icon">🔭</div>
+    <div class="di-label">Tonight</div>
+  </div>
+  <div class="dock-item" id="dock-letters" onclick="openStarLetters()" title="Star Letters">
+    <div class="di-icon">✉️</div>
+    <div class="di-label">Letters</div>
   </div>
   <div class="dock-sep"></div>
   <div class="dock-item" id="dock-pdf" onclick="exportArchivePDF()" title="Export PDF">
@@ -905,83 +988,100 @@ function clearResultLayers(){
 }
 
 function buildBackgroundStars(){
-  const nearCount=180;
-  const nearPos=new Float32Array(nearCount*3);
-  const nearCol=new Float32Array(nearCount*3);
-  for(let i=0;i<nearCount;i++){
-    const theta=Math.random()*Math.PI*2;
-    const phi=Math.acos(2*Math.random()-1);
-    const r=350+Math.random()*500;
-    nearPos[i*3]=r*Math.sin(phi)*Math.cos(theta);
-    nearPos[i*3+1]=r*Math.sin(phi)*Math.sin(theta);
-    nearPos[i*3+2]=r*Math.cos(phi);
-    const tint=Math.random();
-    nearCol[i*3]=.86+tint*.14;
-    nearCol[i*3+1]=.9+tint*.08;
-    nearCol[i*3+2]=1;
-  }
-  const farCount=320;
-  const farPos=new Float32Array(farCount*3);
-  const farCol=new Float32Array(farCount*3);
-  for(let i=0;i<farCount;i++){
-    const theta=Math.random()*Math.PI*2;
-    const phi=Math.acos(2*Math.random()-1);
-    const r=700+Math.random()*700;
-    farPos[i*3]=r*Math.sin(phi)*Math.cos(theta);
-    farPos[i*3+1]=r*Math.sin(phi)*Math.sin(theta);
-    farPos[i*3+2]=r*Math.cos(phi);
-    const tint=Math.random();
-    farCol[i*3]=.75+tint*.25;
-    farCol[i*3+1]=.8+tint*.18;
-    farCol[i*3+2]=tint>.5 ? .82 : 1;
-  }
-
   const group=new THREE.Group();
 
-  const nearGeo=new THREE.BufferGeometry();
-  nearGeo.setAttribute('position',new THREE.BufferAttribute(nearPos,3));
-  nearGeo.setAttribute('color',new THREE.BufferAttribute(nearCol,3));
-  group.add(new THREE.Points(nearGeo,new THREE.PointsMaterial({
-    size:7.2,map:_glowTexWhite,vertexColors:true,sizeAttenuation:true,
-    transparent:true,opacity:.92,depthWrite:false,blending:THREE.AdditiveBlending
+  /* ── Layer A: 10 000 crisp pixel stars — full sphere, fixed pixel size ── */
+  const pixN=10000;
+  const pixPos=new Float32Array(pixN*3),pixCol=new Float32Array(pixN*3);
+  for(let i=0;i<pixN;i++){
+    const th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1);
+    const r=200+Math.random()*700;
+    pixPos[i*3  ]=r*Math.sin(ph)*Math.cos(th);
+    pixPos[i*3+1]=r*Math.sin(ph)*Math.sin(th);
+    pixPos[i*3+2]=r*Math.cos(ph);
+    const t=Math.random();
+    pixCol[i*3  ]=0.62+t*0.38; pixCol[i*3+1]=0.70+t*0.24; pixCol[i*3+2]=t>0.5?0.72:1;
+  }
+  const pixGeo=new THREE.BufferGeometry();
+  pixGeo.setAttribute('position',new THREE.BufferAttribute(pixPos,3));
+  pixGeo.setAttribute('color',  new THREE.BufferAttribute(pixCol,3));
+  group.add(new THREE.Points(pixGeo,new THREE.PointsMaterial({
+    size:1.8,vertexColors:true,sizeAttenuation:false,
+    transparent:true,opacity:0.88,depthWrite:false,blending:THREE.AdditiveBlending,
   })));
 
-  const farGeo=new THREE.BufferGeometry();
-  farGeo.setAttribute('position',new THREE.BufferAttribute(farPos,3));
-  farGeo.setAttribute('color',new THREE.BufferAttribute(farCol,3));
-  group.add(new THREE.Points(farGeo,new THREE.PointsMaterial({
-    size:2.2,map:_glowTexWhite,vertexColors:true,sizeAttenuation:true,transparent:true,
-    opacity:.78,depthWrite:false,blending:THREE.AdditiveBlending
+  /* ── Layer B: 5 000 glow stars (near) ── */
+  const glowN=5000;
+  const glowPos=new Float32Array(glowN*3),glowCol=new Float32Array(glowN*3);
+  for(let i=0;i<glowN;i++){
+    const th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1);
+    const r=60+Math.random()*260;
+    glowPos[i*3  ]=r*Math.sin(ph)*Math.cos(th);
+    glowPos[i*3+1]=r*Math.sin(ph)*Math.sin(th);
+    glowPos[i*3+2]=r*Math.cos(ph);
+    const t=Math.random();
+    glowCol[i*3]=0.80+t*0.20; glowCol[i*3+1]=0.86+t*0.12; glowCol[i*3+2]=1;
+  }
+  const glowGeo=new THREE.BufferGeometry();
+  glowGeo.setAttribute('position',new THREE.BufferAttribute(glowPos,3));
+  glowGeo.setAttribute('color',  new THREE.BufferAttribute(glowCol,3));
+  group.add(new THREE.Points(glowGeo,new THREE.PointsMaterial({
+    size:4.5,map:_glowTexWhite,vertexColors:true,sizeAttenuation:true,
+    transparent:true,opacity:0.88,depthWrite:false,alphaTest:0.004,
+    blending:THREE.AdditiveBlending,
   })));
 
-  const heroCount=20;
-  const heroPos=new Float32Array(heroCount*3);
-  const heroCol=new Float32Array(heroCount*3);
-  for(let i=0;i<heroCount;i++){
-    const theta=Math.random()*Math.PI*2;
-    const phi=Math.acos(2*Math.random()-1);
-    const r=260+Math.random()*260;
-    heroPos[i*3]=r*Math.sin(phi)*Math.cos(theta);
-    heroPos[i*3+1]=r*Math.sin(phi)*Math.sin(theta);
-    heroPos[i*3+2]=r*Math.cos(phi);
-    const palette=[
-      [1,.88,.72],
-      [.72,.84,1],
-      [1,.96,.9],
-      [1,.78,.58],
-    ][Math.floor(Math.random()*4)];
-    heroCol[i*3]=palette[0];
-    heroCol[i*3+1]=palette[1];
-    heroCol[i*3+2]=palette[2];
+  /* ── Layer C: Milky Way band — 6 000 stars concentrated along galactic plane ── */
+  const mwN=6000;
+  const mwPos=new Float32Array(mwN*3),mwCol=new Float32Array(mwN*3);
+  // Galactic plane tilted ~60° from equatorial — simulate with gaussian scatter around a great circle
+  const galTilt=1.08; // radians — approximate galactic inclination
+  for(let i=0;i<mwN;i++){
+    const lon=Math.random()*Math.PI*2;            // galactic longitude
+    const lat=(Math.random()-0.5)*0.32;           // tight gaussian scatter around plane
+    // Rotate from galactic to scene coords
+    const x0=Math.cos(lat)*Math.cos(lon);
+    const y0=Math.sin(lat);
+    const z0=Math.cos(lat)*Math.sin(lon);
+    const y1=y0*Math.cos(galTilt)-z0*Math.sin(galTilt);
+    const z1=y0*Math.sin(galTilt)+z0*Math.cos(galTilt);
+    const r=280+Math.random()*500;
+    mwPos[i*3  ]=x0*r; mwPos[i*3+1]=y1*r; mwPos[i*3+2]=z1*r;
+    // Milky Way colour — warm dusty white to blue-white
+    const dust=Math.random();
+    mwCol[i*3]=0.88+dust*0.12; mwCol[i*3+1]=0.82+dust*0.14; mwCol[i*3+2]=0.68+dust*0.30;
+  }
+  const mwGeo=new THREE.BufferGeometry();
+  mwGeo.setAttribute('position',new THREE.BufferAttribute(mwPos,3));
+  mwGeo.setAttribute('color',  new THREE.BufferAttribute(mwCol,3));
+  group.add(new THREE.Points(mwGeo,new THREE.PointsMaterial({
+    size:1.4,vertexColors:true,sizeAttenuation:false,
+    transparent:true,opacity:0.55,depthWrite:false,blending:THREE.AdditiveBlending,
+  })));
+
+  /* ── Layer D: 50 vivid hero stars ── */
+  const heroN=50;
+  const heroPos=new Float32Array(heroN*3),heroCol=new Float32Array(heroN*3);
+  const palettes=[[1,.88,.72],[.72,.84,1],[1,.96,.9],[1,.78,.58],[.9,1,.8],[.6,.9,1]];
+  for(let i=0;i<heroN;i++){
+    const th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1);
+    const r=55+Math.random()*180;
+    heroPos[i*3  ]=r*Math.sin(ph)*Math.cos(th);
+    heroPos[i*3+1]=r*Math.sin(ph)*Math.sin(th);
+    heroPos[i*3+2]=r*Math.cos(ph);
+    const p=palettes[i%palettes.length];
+    heroCol[i*3]=p[0]; heroCol[i*3+1]=p[1]; heroCol[i*3+2]=p[2];
   }
   const heroGeo=new THREE.BufferGeometry();
   heroGeo.setAttribute('position',new THREE.BufferAttribute(heroPos,3));
-  heroGeo.setAttribute('color',new THREE.BufferAttribute(heroCol,3));
+  heroGeo.setAttribute('color',  new THREE.BufferAttribute(heroCol,3));
   group.add(new THREE.Points(heroGeo,new THREE.PointsMaterial({
-    size:10.5,map:_glowTexWhite,vertexColors:true,sizeAttenuation:true,
-    transparent:true,opacity:.92,depthWrite:false,blending:THREE.AdditiveBlending
+    size:10,map:_glowTexWhite,vertexColors:true,sizeAttenuation:true,
+    transparent:true,opacity:0.94,depthWrite:false,alphaTest:0.004,
+    blending:THREE.AdditiveBlending,
   })));
-  group.userData.starCount=nearCount+farCount;
+
+  group.userData.starCount=pixN+glowN+mwN+heroN;
   return group;
 }
 
@@ -1091,19 +1191,29 @@ function bindSceneEvents(canvas){
 
   canvas.addEventListener('click',e=>{
     if(e.target.closest('.float-card'))return;
+    // Don't fire if this was the end of a drag (moved more than 4px)
+    if(Math.hypot(e.clientX-_dragX,e.clientY-_dragY)>4&&_dragX!==0)return;
+
     _mouse3d.x=(e.clientX/window.innerWidth)*2-1;
     _mouse3d.y=-(e.clientY/window.innerHeight)*2+1;
-    if(_resultStars){
+
+    if(_resultStars&&_starData3d.length){
+      // Scale threshold with camera distance so it always feels right
+      _raycaster.params.Points.threshold=Math.max(6,_cameraRadius*0.065);
+      // Force matrix update so raycaster sees current positions
+      _resultStars.updateMatrixWorld(true);
       _raycaster.setFromCamera(_mouse3d,_camera);
-      const hits=_raycaster.intersectObject(_resultStars);
+      const hits=_raycaster.intersectObject(_resultStars,false);
       if(hits.length){
-        const sd=_starData3d[hits[0].index];
-        if(sd){
+        const idx=hits[0].index;
+        const sd=idx<_starData3d.length ? _starData3d[idx] : null;
+        if(sd&&sd.star){
           loadNeighborCluster(sd);
           spawnFloatCard(sd.star,e.clientX,e.clientY);
+          return;
         }
-        return;
       }
+      // Missed a star — show search bar so user can try again
     }
     showCenterUI();
   });
@@ -1165,10 +1275,10 @@ function initScene(){
     _targetCameraTarget=new THREE.Vector3(0,0,0);
 
     _camera=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,0.1,5000);
-    _renderer=new THREE.WebGLRenderer({canvas,antialias:false,alpha:true,powerPreference:'high-performance'});
-    _renderer.setPixelRatio(1);
+    _renderer=new THREE.WebGLRenderer({canvas,antialias:false,alpha:false,powerPreference:'high-performance'});
+    _renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));
     _renderer.setSize(window.innerWidth,window.innerHeight);
-    _renderer.setClearColor(0x030814,1);
+    _renderer.setClearColor(0x020610,1);
     setDebugState('warn',{renderer:'created'});
 
     _raycaster=new THREE.Raycaster();
@@ -1267,14 +1377,32 @@ function renderSearchResults(stars,targetLY){
 
   focusWorldPosition(focusX/stars.length,focusY/stars.length,focusZ/stars.length);
 
+  // ── Ripple reveal: stars expand outward from origin ──
+  const posAttr=geo.attributes.position;
+  const targetPositions=positions.slice();
+  const originPositions=new Float32Array(stars.length*3); // all at 0,0,0
+  posAttr.array.set(originPositions);
+  posAttr.needsUpdate=true;
+  let rippleT=0;
+  const ripple=()=>{
+    if(!_resultStars||rippleT>=1){if(_resultStars){posAttr.array.set(targetPositions);posAttr.needsUpdate=true;}return;}
+    rippleT=Math.min(1,rippleT+0.045);
+    const ease=1-Math.pow(1-rippleT,3); // ease-out cubic
+    for(let i=0;i<stars.length*3;i++) posAttr.array[i]=targetPositions[i]*ease;
+    posAttr.needsUpdate=true;
+    requestAnimationFrame(ripple);
+  };
+  requestAnimationFrame(ripple);
+
+  // ── Pulse glow once settled ──
   let t=0;
   const pulse=()=>{
     if(!_resultStars)return;
-    t+=0.02;
-    mat.size=18+Math.sin(t)*2.6;
+    t+=0.018;
+    mat.size=18+Math.sin(t)*3;
     _pulseAnimFrame=requestAnimationFrame(pulse);
   };
-  pulse();
+  setTimeout(pulse,700);
 }
 
 function spectralRGB(sp){
@@ -1318,11 +1446,18 @@ function spawnFloatCard(star,sx,sy){
   const witnessHTML=witnessingStatus(star,S.currentEventName,S.currentLY,S.currentYear);
   const col=spectralColor(star.spectral_type);
 
+  // Era badge — shown when era mode is on
+  const eraRGB=eraColor(star.dist_ly);
+  const eraHex=`rgb(${Math.round(eraRGB[0]*255)},${Math.round(eraRGB[1]*255)},${Math.round(eraRGB[2]*255)})`;
+  const eraBadge=_eraMode
+    ? `<div style="display:inline-block;margin-bottom:6px;padding:2px 9px;border-radius:20px;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;background:${eraHex}22;border:1px solid ${eraHex}66;color:${eraHex};font-family:'Orbitron',sans-serif">${eraLabel(star.dist_ly)}</div>`
+    : '';
+
   const el=document.createElement('div');
   el.className='float-card';
   el.id=id;
   // Position near click but keep on screen
-  const w=300,h=320;
+  const w=300,h=340;
   let left=Math.min(sx+20,window.innerWidth-w-20);
   let top=Math.min(Math.max(sy-h/2,10),window.innerHeight-h-80);
   el.style.cssText=`left:${left}px;top:${top}px`;
@@ -1330,6 +1465,7 @@ function spawnFloatCard(star,sx,sy){
   el.innerHTML=`
     <button class="fc-pin" id="pin-${id}" onclick="togglePin('${id}')" title="Pin card">📌</button>
     <button class="fc-close" onclick="removeFloatCard('${id}')">✕</button>
+    ${eraBadge}
     <div class="fc-star-name">${star.name}</div>
     <div class="fc-dist">${star.dist_ly.toLocaleString()} ly · ${star.spectral_type||'?'}-type · ${star.constellation||'—'}</div>
     <div class="fc-spec"><div class="fc-spec-dot" style="background:${col};box-shadow:0 0 5px ${col}"></div><div class="fc-spec-lbl">${spectralDesc(star.spectral_type)}</div></div>
@@ -1339,6 +1475,10 @@ function spawnFloatCard(star,sx,sy){
       <button class="fc-btn gold" onclick="openCertForStar(S.floatCards['${id}'].star)">✦ Cert</button>
       <button class="fc-btn" onclick="saveToArchiveFromCard('${id}')">⭐ Archive</button>
       <button class="fc-btn" onclick="openShareModal(S.floatCards['${id}'].star,S.currentEventName,S.currentYear)">📤 Share</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:7px">
+      <button class="fc-btn" style="flex:1;background:rgba(77,159,255,.08);border-color:rgba(77,159,255,.25)" onclick="openFindItTonight(S.floatCards['${id}'].star)">🔭 Tonight</button>
+      <button class="fc-btn" style="flex:1;background:rgba(176,96,255,.08);border-color:rgba(176,96,255,.25)" onclick="openStarLetters(S.floatCards['${id}'].star)">✉️ Letters</button>
     </div>`;
 
   document.body.appendChild(el);
@@ -1721,21 +1861,239 @@ function startDecayCounter(year,month,day){
 
 /* ════════ ERA MODE ════════ */
 let _eraMode=false;
-function toggleEraMode(){
-  _eraMode=!_eraMode;
-  document.getElementById('dock-era').classList.toggle('active',_eraMode);
-  document.getElementById('era-legend').classList.toggle('visible',_eraMode);
-  if(S.currentStars.length)renderSearchResults(S.currentStars,S.currentLY);
-}
+
+// Era bands keyed on the year the light LEFT that star (CURRENT_YEAR - dist_ly)
+// HYG catalog tops out ~1800 ly → yr range ≈ 226 CE … 2026 CE
+// Extend scale down to BCE for deep-catalog stars / future Gaia data
+const ERA_BANDS=[
+  {maxYr:-3000, rgb:[0.61,0.36,0.70], hex:'#9c5cb3', label:'Prehistoric'},
+  {maxYr:  -500, rgb:[0.85,0.40,0.12], hex:'#d9661f', label:'Ancient'},
+  {maxYr:   500, rgb:[0.18,0.58,0.90], hex:'#2e94e6', label:'Classical'},
+  {maxYr:  1000, rgb:[0.88,0.14,0.42], hex:'#e0246b', label:'Medieval'},
+  {maxYr:  1500, rgb:[0.14,0.72,0.42], hex:'#24b86b', label:'Renaissance'},
+  {maxYr:  1800, rgb:[0.92,0.62,0.10], hex:'#eb9e19', label:'Early Modern'},
+  {maxYr:  9999, rgb:[0.95,0.82,0.14], hex:'#f2d124', label:'Modern'},
+];
+
 function eraColor(distLY){
   const yr=CURRENT_YEAR-distLY;
-  if(yr<-3000)return[.61,.36,.7];
-  if(yr<-500)return[.9,.5,.13];
-  if(yr<500)return[.2,.6,.86];
-  if(yr<1500)return[.91,.12,.39];
-  if(yr<1900)return[.15,.68,.38];
-  return[.95,.77,.08];
+  // Find surrounding bands and lerp for smooth transitions
+  let loIdx=0;
+  for(let i=0;i<ERA_BANDS.length-1;i++){
+    if(yr<=ERA_BANDS[i].maxYr){loIdx=i;break;}
+    loIdx=i+1;
+  }
+  if(loIdx<=0)return ERA_BANDS[0].rgb;
+  if(loIdx>=ERA_BANDS.length-1)return ERA_BANDS[ERA_BANDS.length-1].rgb;
+  const lo=ERA_BANDS[loIdx-1], hi=ERA_BANDS[loIdx];
+  const span=hi.maxYr-lo.maxYr;
+  const t=span===0?0:Math.max(0,Math.min(1,(yr-lo.maxYr)/span));
+  return[
+    lo.rgb[0]+(hi.rgb[0]-lo.rgb[0])*t,
+    lo.rgb[1]+(hi.rgb[1]-lo.rgb[1])*t,
+    lo.rgb[2]+(hi.rgb[2]-lo.rgb[2])*t,
+  ];
 }
+
+function eraLabel(distLY){
+  const yr=CURRENT_YEAR-distLY;
+  for(const b of ERA_BANDS){if(yr<=b.maxYr)return b.label;}
+  return ERA_BANDS[ERA_BANDS.length-1].label;
+}
+
+function buildEraLegend(){
+  const container=document.getElementById('era-legend');
+  if(!container)return;
+  container.innerHTML=ERA_BANDS.map(b=>
+    `<div class="el-row"><div class="el-dot" style="background:${b.hex}"></div>${b.label}</div>`
+  ).join('');
+}
+
+function toggleEraMode(){
+  _eraMode=!_eraMode;
+  const btn=document.getElementById('dock-era');
+  if(btn){
+    btn.classList.toggle('active',_eraMode);
+    btn.title=_eraMode?'Era Mode ON — stars coloured by historical period':'Era Mode';
+  }
+  document.getElementById('era-legend').classList.toggle('visible',_eraMode);
+  // Tint background stars faintly in era mode
+  if(_backgroundStars){
+    _backgroundStars.traverse(obj=>{
+      if(obj.isMesh||obj.isPoints){
+        obj.material.opacity=_eraMode?0.48:undefined;
+        obj.material.needsUpdate=true;
+      }
+    });
+  }
+  if(S.currentStars.length)renderSearchResults(S.currentStars,S.currentLY);
+  setDebugState('ok',{status:_eraMode?'era mode ON':'era mode OFF'});
+}
+
+/* ════════ FIND IT TONIGHT ════════ */
+let _fitStar=null;
+
+function openFindItTonight(star){
+  // star is optional — if called from dock with no args, use first result star
+  _fitStar = star || (S.currentStars.length ? S.currentStars[0] : null);
+  document.getElementById('fit-year').value = S.currentYear||'';
+  document.getElementById('fit-result').style.display='none';
+  document.getElementById('fit-modal').classList.add('open');
+  if(_fitStar && S.currentYear) runFindItTonight();
+}
+
+function closeFindItTonight(){
+  document.getElementById('fit-modal').classList.remove('open');
+}
+
+async function runFindItTonight(){
+  const yearVal=parseInt(document.getElementById('fit-year').value);
+  if(isNaN(yearVal)){alert('Enter a valid year');return;}
+
+  // Find closest star to that light-year distance
+  const targetLY = Math.max(0, 2026 - yearVal);
+  if(targetLY===0){
+    document.getElementById('fit-result').style.display='block';
+    document.getElementById('fit-stat').innerHTML=`<em>This event is in the future — the light hasn't left Earth yet.</em>`;
+    return;
+  }
+
+  // Fetch stars if needed
+  let star = _fitStar;
+  if(!star || Math.abs(star.dist_ly - targetLY) > targetLY*0.2){
+    try{
+      const res=await fetch(`/api/stars?light_years=${targetLY}&tolerance=0.15`);
+      const data=await res.json();
+      if(data.stars&&data.stars.length) star=data.stars[0];
+    }catch(e){}
+  }
+  if(!star){
+    document.getElementById('fit-result').style.display='block';
+    document.getElementById('fit-stat').innerHTML='<em>No star found at that distance in our catalog.</em>';
+    return;
+  }
+  _fitStar=star;
+
+  // Get user location
+  const lat=S.userLat||25.2;
+  const lon=S.userLon||55.27;
+
+  try{
+    const r=await fetch(`/api/sky-position?ra=${star.ra}&dec=${star.dec}&lat=${lat}&lon=${lon}`);
+    const sky=await r.json();
+    renderFindItTonight(star,sky,yearVal,targetLY);
+  }catch(e){
+    document.getElementById('fit-result').style.display='block';
+    document.getElementById('fit-stat').innerHTML='<em>Could not compute sky position.</em>';
+  }
+}
+
+function renderFindItTonight(star,sky,year,targetLY){
+  document.getElementById('fit-result').style.display='block';
+  const badge=document.getElementById('fit-badge');
+  badge.className='fit-badge '+(sky.visible_now?'visible':'hidden');
+  badge.textContent=sky.visible_now?'Visible Right Now':'Below Horizon Now';
+
+  // Position star dot in sky view
+  // x = azimuth (0=N, 90=E, 180=S, 270=W) → map to 0–100% width
+  // y = altitude (0=horizon, 90=zenith) → map to 100–0% height
+  const dot=document.getElementById('fit-star-dot');
+  const xPct=(sky.az_now/360)*100;
+  const yPct=Math.max(5,Math.min(90, 100-(sky.alt_now/90)*85));
+  dot.style.left=xPct+'%';
+  dot.style.top=yPct+'%';
+  dot.style.opacity=sky.alt_now>0?'1':'0.3';
+
+  // Draw horizon stars on canvas
+  const cv=document.getElementById('fit-sky-canvas');
+  const ctx=cv.getContext('2d');
+  cv.width=cv.offsetWidth||440; cv.height=cv.offsetHeight||200;
+  ctx.clearRect(0,0,cv.width,cv.height);
+  for(let i=0;i<120;i++){
+    const sx=Math.random()*cv.width;
+    const sy=Math.random()*cv.height*0.7;
+    const sz=Math.random()*1.2+0.4;
+    ctx.beginPath();
+    ctx.arc(sx,sy,sz,0,Math.PI*2);
+    ctx.fillStyle=`rgba(255,255,255,${0.3+Math.random()*0.5})`;
+    ctx.fill();
+  }
+
+  const yr=yearLabel(year);
+  const dirNow=`<span class="fit-dir">${sky.compass}</span> at <span class="fit-dir">${Math.max(0,sky.alt_now).toFixed(0)}°</span>`;
+  const dirBest=`<span class="fit-dir">${sky.best_compass}</span> at <span class="fit-dir">${sky.best_alt.toFixed(0)}°</span>`;
+  document.getElementById('fit-stat').innerHTML=`
+    <strong>${star.name}</strong> (${star.dist_ly.toFixed(1)} ly · ${star.constellation||'—'}) is receiving the light from <strong>${yr}</strong> right now.<br><br>
+    ${sky.visible_now
+      ? `Face <strong>${dirNow}</strong> to see it in tonight's sky.`
+      : `It's below the horizon right now, but peaks at ${dirBest} around <strong>${sky.best_time_utc}</strong>.`
+    }<br>
+    <span style="color:var(--dim);font-size:.68rem">Visible ${sky.above_horizon_pct}% of the next 24 hours from your location.</span>`;
+}
+
+/* ════════ STAR LETTERS ════════ */
+let _lettersStarId=null, _lettersStarName='';
+
+function _starId(star){ return (star.name||'unknown').toLowerCase().replace(/\s+/g,'_')+'_'+Math.round(star.dist_ly); }
+
+async function openStarLetters(star){
+  star = star || (S.currentStars.length ? S.currentStars[0] : null);
+  if(!star){ alert('Search for an event first to pick a star.'); return; }
+  _lettersStarId = _starId(star);
+  _lettersStarName = star.name;
+  document.getElementById('letters-sub').textContent=
+    `Messages left on ${star.name} (${star.dist_ly.toFixed(1)} ly) across time. Future visitors will find yours here.`;
+  document.getElementById('letter-author').value='';
+  document.getElementById('letter-msg').value='';
+  document.getElementById('letter-year').value=S.currentYear||'';
+  document.getElementById('letters-modal').classList.add('open');
+  await loadLetters();
+}
+
+function closeStarLetters(){ document.getElementById('letters-modal').classList.remove('open'); }
+
+async function loadLetters(){
+  const list=document.getElementById('letters-list');
+  list.innerHTML='<div class="letters-empty">Loading…</div>';
+  try{
+    const r=await fetch(`/api/letters/${encodeURIComponent(_lettersStarId)}`);
+    const letters=await r.json();
+    if(!letters.length){
+      list.innerHTML='<div class="letters-empty">No letters yet.<br>Be the first to leave a message on this star.</div>';
+      return;
+    }
+    list.innerHTML=letters.map(l=>`
+      <div class="letter-card">
+        <div class="letter-author">${l.author||'Anonymous'} ${l.year?'· '+l.year:''}</div>
+        <div class="letter-msg">${escHtml(l.message)}</div>
+        <div class="letter-meta">Written ${l.written||'unknown date'}</div>
+      </div>`).join('');
+  }catch(e){
+    list.innerHTML='<div class="letters-empty">Could not load letters.</div>';
+  }
+}
+
+async function submitLetter(){
+  const msg=document.getElementById('letter-msg').value.trim();
+  if(!msg){alert('Write something first.');return;}
+  const author=document.getElementById('letter-author').value.trim()||'Anonymous';
+  const year=document.getElementById('letter-year').value.trim();
+  try{
+    const r=await fetch(`/api/letters/${encodeURIComponent(_lettersStarId)}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({author,message:msg,year}),
+    });
+    const data=await r.json();
+    if(data.ok){
+      document.getElementById('letter-msg').value='';
+      document.getElementById('letter-author').value='';
+      await loadLetters();
+    }
+  }catch(e){ alert('Could not save letter. Is the server running?'); }
+}
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 /* ════════ FRAGILITY PANEL ════════ */
 const FRAGILITY={
@@ -2154,6 +2512,7 @@ document.addEventListener('keydown',e=>{
 });
 
 /* ════════ INIT ════════ */
+buildEraLegend();
 initScene();
 loadEvents();
 // Show HUD after brief delay

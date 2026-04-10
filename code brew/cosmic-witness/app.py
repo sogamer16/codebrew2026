@@ -569,6 +569,161 @@ def star_detail(star_name: str):
 
 
 # ---------------------------------------------------------------------------
+# Sky position — "Find It Tonight"
+# ---------------------------------------------------------------------------
+
+def _gmst(jd: float) -> float:
+    """Greenwich Mean Sidereal Time in radians for a given Julian Date."""
+    T = (jd - 2451545.0) / 36525.0
+    gmst_deg = (280.46061837 + 360.98564736629 * (jd - 2451545.0)
+                + 0.000387933 * T * T - T * T * T / 38710000.0) % 360
+    return math.radians(gmst_deg)
+
+def _altaz(ra_deg: float, dec_deg: float, lat_deg: float, lon_deg: float,
+           jd: float) -> tuple[float, float]:
+    """Return (altitude_deg, azimuth_deg) for a star at given observer location/time."""
+    ra  = math.radians(ra_deg)
+    dec = math.radians(dec_deg)
+    lat = math.radians(lat_deg)
+    lon = math.radians(lon_deg)
+
+    lst  = (_gmst(jd) + lon) % (2 * math.pi)
+    ha   = lst - ra                        # hour angle
+
+    sin_alt = (math.sin(dec) * math.sin(lat)
+               + math.cos(dec) * math.cos(lat) * math.cos(ha))
+    alt = math.degrees(math.asin(max(-1.0, min(1.0, sin_alt))))
+
+    cos_az = ((math.sin(dec) - math.sin(lat) * sin_alt)
+              / (math.cos(lat) * math.cos(math.radians(alt)) + 1e-10))
+    az = math.degrees(math.acos(max(-1.0, min(1.0, cos_az))))
+    if math.sin(ha) > 0:
+        az = 360 - az
+
+    return alt, az
+
+def _compass(az: float) -> str:
+    dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE",
+            "S","SSW","SW","WSW","W","WNW","NW","NNW"]
+    return dirs[round(az / 22.5) % 16]
+
+def _jd_now() -> float:
+    """Current Julian Date (UTC)."""
+    import datetime
+    now = datetime.datetime.utcnow()
+    a = (14 - now.month) // 12
+    y = now.year + 4800 - a
+    m = now.month + 12 * a - 3
+    jdn = (now.day + (153 * m + 2) // 5 + 365 * y
+           + y // 4 - y // 100 + y // 400 - 32045)
+    frac = (now.hour + now.minute / 60 + now.second / 3600) / 24 - 0.5
+    return jdn + frac
+
+@app.route("/api/sky-position")
+def sky_position():
+    """
+    Return altitude/azimuth + visibility for a star at the user's location right now.
+    Query params: ra (deg), dec (deg), lat (deg), lon (deg)
+    Also sweeps tonight to find the best visibility window.
+    """
+    try:
+        ra  = float(request.args["ra"])
+        dec = float(request.args["dec"])
+        lat = float(request.args.get("lat",  25.0))   # default Dubai
+        lon = float(request.args.get("lon",  55.0))
+    except (KeyError, ValueError):
+        return jsonify({"error": "ra, dec required"}), 400
+
+    jd_now = _jd_now()
+    alt_now, az_now = _altaz(ra, dec, lat, lon, jd_now)
+
+    # Sweep next 24 hours in 15-min steps to find peak altitude
+    best_alt, best_az, best_jd = -90.0, 0.0, jd_now
+    for step in range(96):
+        jd_t = jd_now + step / (96)
+        a, z = _altaz(ra, dec, lat, lon, jd_t)
+        if a > best_alt:
+            best_alt, best_az, best_jd = a, z, jd_t
+
+    # Convert best_jd to UTC wall-clock
+    import datetime
+    jd_floor = int(best_jd + 0.5)
+    frac     = (best_jd + 0.5) - jd_floor
+    dt_base  = datetime.datetime(2000, 1, 1, 12) + datetime.timedelta(days=best_jd - 2451545.0)
+    best_time_utc = dt_base.strftime("%H:%M UTC")
+
+    visible_now = alt_now > 0
+    above_horizon_pct = sum(
+        1 for s in range(96)
+        if _altaz(ra, dec, lat, lon, jd_now + s / 96)[0] > 0
+    ) / 96 * 100
+
+    return jsonify({
+        "alt_now":    round(alt_now, 1),
+        "az_now":     round(az_now, 1),
+        "compass":    _compass(az_now),
+        "visible_now": visible_now,
+        "best_alt":   round(best_alt, 1),
+        "best_az":    round(best_az, 1),
+        "best_compass": _compass(best_az),
+        "best_time_utc": best_time_utc,
+        "above_horizon_pct": round(above_horizon_pct, 0),
+    })
+
+
+# ---------------------------------------------------------------------------
+# Star Letters — time capsule messages on stars
+# ---------------------------------------------------------------------------
+
+import datetime as _dt
+
+LETTERS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "star_letters.json")
+
+def _load_letters() -> dict:
+    if os.path.exists(LETTERS_PATH):
+        try:
+            with open(LETTERS_PATH) as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+def _save_letters(data: dict):
+    with open(LETTERS_PATH, "w") as f:
+        json.dump(data, f, indent=2)
+
+@app.route("/api/letters/<star_id>", methods=["GET"])
+def get_letters(star_id: str):
+    letters = _load_letters()
+    return jsonify(letters.get(star_id, []))
+
+@app.route("/api/letters/<star_id>", methods=["POST"])
+def post_letter(star_id: str):
+    body = request.get_json(silent=True) or {}
+    author  = str(body.get("author",  "Anonymous"))[:60]
+    message = str(body.get("message", ""))[:1000]
+    year    = str(body.get("year",    ""))[:20]
+
+    if not message.strip():
+        return jsonify({"error": "message required"}), 400
+
+    letters = _load_letters()
+    if star_id not in letters:
+        letters[star_id] = []
+
+    entry = {
+        "id":      len(letters[star_id]),
+        "author":  author,
+        "message": message,
+        "year":    year,
+        "written": _dt.datetime.utcnow().strftime("%Y-%m-%d"),
+    }
+    letters[star_id].append(entry)
+    _save_letters(letters)
+    return jsonify({"ok": True, "total": len(letters[star_id])})
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
