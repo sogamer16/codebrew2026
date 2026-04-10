@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Sirius — The Sky Is a Time Machine</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-<script src="/static/three.min.js?v=20260410-1738"></script>
+<script src="/static/three.min.js?v=20260410-1758"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -45,6 +45,18 @@ html,body{
 #three-debug .td-key{color:var(--mid)}
 #three-debug .td-val{color:var(--text);text-align:right}
 
+@media (max-width: 720px){
+  #center-ui{width:min(92vw,560px)}
+  #center-ui.compact{
+    top:76px;
+    width:calc(100vw - 28px);
+  }
+  #center-ui.compact #cat-pills{display:none}
+  #scene-actions{top:auto;right:12px;bottom:96px}
+  .scene-btn{padding:10px 12px;font-size:.66rem}
+  #three-debug{left:12px;bottom:88px;min-width:180px;max-width:240px}
+}
+
 /* ══ CUSTOM CURSOR ══ */
 #cursor-ring{
   position:fixed;width:32px;height:32px;border:1.5px solid rgba(77,159,255,.7);
@@ -63,11 +75,22 @@ html,body{
   position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
   z-index:200;
   display:flex;flex-direction:column;align-items:center;gap:14px;
-  opacity:0;transition:opacity .4s cubic-bezier(.16,1,.3,1);
+  opacity:0;transition:opacity .4s cubic-bezier(.16,1,.3,1),transform .35s cubic-bezier(.16,1,.3,1);
   pointer-events:none;
   width:min(600px,90vw);
 }
 #center-ui.visible{opacity:1;pointer-events:all}
+#center-ui.compact{
+  top:86px;
+  transform:translate(-50%,0);
+  width:min(420px,92vw);
+  gap:10px;
+}
+#center-ui.compact .logo-mark{font-size:clamp(1rem,2vw,1.35rem);margin-bottom:0}
+#center-ui.compact .logo-sub,
+#center-ui.compact #search-hint{display:none}
+#center-ui.compact #cat-pills{max-width:100%;opacity:.88}
+#center-ui.compact #search-input{padding:13px 48px 13px 18px;font-size:.92rem}
 
 .logo-mark{
   font-family:'Orbitron',sans-serif;font-size:clamp(1.6rem,4vw,2.6rem);
@@ -103,6 +126,18 @@ html,body{
   transition:transform .2s,box-shadow .2s;
 }
 #search-go:hover{transform:translateY(-50%) scale(1.08);box-shadow:0 0 20px rgba(77,159,255,.4)}
+
+#scene-actions{
+  position:fixed;top:18px;right:18px;z-index:320;
+  display:flex;gap:8px;align-items:center;
+}
+.scene-btn{
+  padding:9px 14px;border-radius:999px;
+  border:1px solid rgba(77,159,255,.25);background:rgba(4,8,24,.78);
+  color:var(--text);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;
+  cursor:pointer;backdrop-filter:blur(10px);transition:.18s;
+}
+.scene-btn:hover{border-color:rgba(77,159,255,.45);color:#fff;background:rgba(8,16,40,.9)}
 
 #autocomplete-float{
   position:absolute;top:calc(100% + 8px);left:0;right:0;
@@ -474,6 +509,11 @@ html,body{
   <div class="dh-sub">and will never stop</div>
 </div>
 
+<div id="scene-actions">
+  <button class="scene-btn" onclick="showCenterUI(true)">Search</button>
+  <button class="scene-btn" onclick="refocusScene()">Refocus</button>
+</div>
+
 <!-- Era legend -->
 <div class="era-legend" id="era-legend">
   <div class="el-row"><div class="el-dot" style="background:#9b59b6"></div>Prehistoric</div>
@@ -516,7 +556,7 @@ html,body{
 <!-- BOTTOM DOCK -->
 <div id="dock-zone"></div>
 <div id="dock">
-  <div class="dock-item" id="dock-search" onclick="showCenterUI()" title="Search">
+  <div class="dock-item" id="dock-search" onclick="showCenterUI(true)" title="Search">
     <div class="di-icon">🔭</div>
     <div class="di-label">Search</div>
   </div>
@@ -532,6 +572,10 @@ html,body{
   <div class="dock-item" id="dock-era" onclick="toggleEraMode()" title="Era Mode">
     <div class="di-icon">🏛</div>
     <div class="di-label">Era Mode</div>
+  </div>
+  <div class="dock-item" id="dock-refocus" onclick="refocusScene()" title="Refocus">
+    <div class="di-icon">◎</div>
+    <div class="di-label">Refocus</div>
   </div>
   <div class="dock-item" id="dock-moment" onclick="openModal('custom')" title="Add Moment">
     <div class="di-icon">＋</div>
@@ -738,13 +782,16 @@ let _scene,_camera,_renderer,_world,_backgroundStars,_resultStars,_focusLines,_n
 let _raycaster,_mouse3d,_glowTexWhite;
 let _starData3d=[];
 let _pulseAnimFrame=null;
-let _isDragging=false,_dragX=0,_dragY=0;
-let _phi=1.35,_theta=0.2,_targetPhi=1.35,_targetTheta=0.2;
-let _cameraRadius=280,_targetRadius=280;
+let _isDragging=false,_isPanning=false,_dragX=0,_dragY=0;
+const _defaultPhi=1.35,_defaultTheta=0.2,_defaultRadius=280;
+let _phi=_defaultPhi,_theta=_defaultTheta,_targetPhi=_defaultPhi,_targetTheta=_defaultTheta;
+let _cameraRadius=_defaultRadius,_targetRadius=_defaultRadius;
 let _autoRotSpeed=0.00035;
 let _debugFrameCounter=0;
 let _sceneBootStarted=false;
 let _minCameraRadius=140,_maxCameraRadius=520;
+let _cameraTarget=null,_targetCameraTarget=null;
+let _hasExplored=false,_centerCompact=false;
 
 function setDebugState(status, fields={}){
   const root=document.getElementById('three-debug');
@@ -765,6 +812,18 @@ function setDebugState(status, fields={}){
   });
 }
 
+function setCenterCompact(compact){
+  _centerCompact=!!compact;
+  const el=document.getElementById('center-ui');
+  if(!el)return;
+  el.classList.toggle('compact',_centerCompact);
+}
+
+function markSceneExplored(){
+  _hasExplored=true;
+  if(S.centerVisible)setCenterCompact(true);
+}
+
 setTimeout(()=>{
   setDebugState('warn',{status:'js loaded'});
 },0);
@@ -773,13 +832,16 @@ function updateCamera(){
   _theta+=(_targetTheta-_theta)*0.08;
   _phi+=(_targetPhi-_phi)*0.08;
   _cameraRadius+=(_targetRadius-_cameraRadius)*0.08;
+  if(_cameraTarget&&_targetCameraTarget)_cameraTarget.lerp(_targetCameraTarget,0.08);
   const sinPhi=Math.sin(_phi);
   _camera.position.set(
     _cameraRadius*sinPhi*Math.sin(_theta),
     _cameraRadius*Math.cos(_phi),
     _cameraRadius*sinPhi*Math.cos(_theta)
   );
-  _camera.lookAt(0,0,0);
+  if(_cameraTarget)_camera.position.add(_cameraTarget);
+  if(_cameraTarget)_camera.lookAt(_cameraTarget.x,_cameraTarget.y,_cameraTarget.z);
+  else _camera.lookAt(0,0,0);
 }
 
 function focusWorldPosition(x,y,z){
@@ -787,6 +849,17 @@ function focusWorldPosition(x,y,z){
   _targetPhi=Math.acos(Math.max(-0.98,Math.min(0.98,y/len)));
   _targetTheta=Math.atan2(x/len,z/len);
   _targetRadius=220;
+  if(_targetCameraTarget)_targetCameraTarget.set(x*0.35,y*0.35,z*0.35);
+}
+
+function refocusScene(){
+  _targetPhi=_defaultPhi;
+  _targetTheta=_defaultTheta;
+  _targetRadius=_defaultRadius;
+  if(_targetCameraTarget)_targetCameraTarget.set(0,0,0);
+  setCenterCompact(true);
+  showCenterUI();
+  setDebugState('ok',{status:'refocused'});
 }
 
 function makeGlowTex(r,g,b){
@@ -869,16 +942,16 @@ function buildBackgroundStars(){
   nearGeo.setAttribute('position',new THREE.BufferAttribute(nearPos,3));
   nearGeo.setAttribute('color',new THREE.BufferAttribute(nearCol,3));
   group.add(new THREE.Points(nearGeo,new THREE.PointsMaterial({
-    size:10.5,map:_glowTexWhite,vertexColors:true,sizeAttenuation:true,
-    transparent:true,opacity:1,depthWrite:false,blending:THREE.AdditiveBlending
+    size:7.2,map:_glowTexWhite,vertexColors:true,sizeAttenuation:true,
+    transparent:true,opacity:.92,depthWrite:false,blending:THREE.AdditiveBlending
   })));
 
   const farGeo=new THREE.BufferGeometry();
   farGeo.setAttribute('position',new THREE.BufferAttribute(farPos,3));
   farGeo.setAttribute('color',new THREE.BufferAttribute(farCol,3));
   group.add(new THREE.Points(farGeo,new THREE.PointsMaterial({
-    size:3.2,map:_glowTexWhite,vertexColors:true,sizeAttenuation:true,transparent:true,
-    opacity:.95,depthWrite:false,blending:THREE.AdditiveBlending
+    size:2.2,map:_glowTexWhite,vertexColors:true,sizeAttenuation:true,transparent:true,
+    opacity:.78,depthWrite:false,blending:THREE.AdditiveBlending
   })));
 
   const heroCount=20;
@@ -905,8 +978,8 @@ function buildBackgroundStars(){
   heroGeo.setAttribute('position',new THREE.BufferAttribute(heroPos,3));
   heroGeo.setAttribute('color',new THREE.BufferAttribute(heroCol,3));
   group.add(new THREE.Points(heroGeo,new THREE.PointsMaterial({
-    size:15,map:_glowTexWhite,vertexColors:true,sizeAttenuation:true,
-    transparent:true,opacity:.95,depthWrite:false,blending:THREE.AdditiveBlending
+    size:10.5,map:_glowTexWhite,vertexColors:true,sizeAttenuation:true,
+    transparent:true,opacity:.92,depthWrite:false,blending:THREE.AdditiveBlending
   })));
   group.userData.starCount=nearCount+farCount;
   return group;
@@ -946,19 +1019,27 @@ function loadNeighborCluster(starDatum){
   geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
   geo.setAttribute('color',new THREE.BufferAttribute(col,3));
   _neighborStars=new THREE.Points(geo,new THREE.PointsMaterial({
-    size:7.5,map:_glowTexWhite,vertexColors:true,sizeAttenuation:true,
-    transparent:true,opacity:.82,depthWrite:false,blending:THREE.AdditiveBlending
+    size:5.8,map:_glowTexWhite,vertexColors:true,sizeAttenuation:true,
+    transparent:true,opacity:.72,depthWrite:false,blending:THREE.AdditiveBlending
   }));
   _world.add(_neighborStars);
 }
 
 function bindSceneEvents(canvas){
   canvas.addEventListener('mousedown',e=>{
-    if(e.button!==0)return;
-    _isDragging=true;
+    if(e.button===0){
+      _isDragging=true;
+      canvas.style.cursor='grabbing';
+    }else if(e.button===1){
+      _isPanning=true;
+      canvas.style.cursor='move';
+      e.preventDefault();
+    }else{
+      return;
+    }
     _dragX=e.clientX;
     _dragY=e.clientY;
-    canvas.style.cursor='grabbing';
+    markSceneExplored();
   });
 
   window.addEventListener('mousemove',e=>{
@@ -969,6 +1050,19 @@ function bindSceneEvents(canvas){
       _targetPhi=Math.max(0.25,Math.min(Math.PI-0.25,_targetPhi-dy*0.004));
       _dragX=e.clientX;
       _dragY=e.clientY;
+      return;
+    }
+    if(_isPanning&&_targetCameraTarget&&_camera){
+      const dx=e.clientX-_dragX;
+      const dy=e.clientY-_dragY;
+      const panScale=Math.max(0.08,_targetRadius*0.0018);
+      const right=new THREE.Vector3(1,0,0).applyQuaternion(_camera.quaternion);
+      const up=new THREE.Vector3(0,1,0).applyQuaternion(_camera.quaternion);
+      _targetCameraTarget.addScaledVector(right,-dx*panScale);
+      _targetCameraTarget.addScaledVector(up,dy*panScale);
+      _dragX=e.clientX;
+      _dragY=e.clientY;
+      markSceneExplored();
       return;
     }
 
@@ -991,6 +1085,7 @@ function bindSceneEvents(canvas){
 
   window.addEventListener('mouseup',()=>{
     _isDragging=false;
+    _isPanning=false;
     canvas.style.cursor='';
   });
 
@@ -1017,8 +1112,12 @@ function bindSceneEvents(canvas){
     e.preventDefault();
     const next=_targetRadius + (e.deltaY>0 ? 24 : -24);
     _targetRadius=Math.max(_minCameraRadius,Math.min(_maxCameraRadius,next));
+    markSceneExplored();
     setDebugState('ok',{status:`zoom ${Math.round(_targetRadius)}`});
   },{passive:false});
+  canvas.addEventListener('auxclick',e=>{
+    if(e.button===1)e.preventDefault();
+  });
 
   window.addEventListener('resize',()=>{
     _camera.aspect=window.innerWidth/window.innerHeight;
@@ -1062,6 +1161,8 @@ function initScene(){
     setDebugState('warn',{script:`r${window.THREE.REVISION||'?'}`,scene:'created'});
     _world=new THREE.Group();
     _scene.add(_world);
+    _cameraTarget=new THREE.Vector3(0,0,0);
+    _targetCameraTarget=new THREE.Vector3(0,0,0);
 
     _camera=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,0.1,5000);
     _renderer=new THREE.WebGLRenderer({canvas,antialias:false,alpha:true,powerPreference:'high-performance'});
@@ -1116,6 +1217,8 @@ function renderSearchResults(stars,targetLY){
   }
   clearResultLayers();
   if(!stars||!stars.length)return;
+  markSceneExplored();
+  setCenterCompact(true);
 
   const positions=new Float32Array(stars.length*3);
   const colors=new Float32Array(stars.length*3);
@@ -1149,7 +1252,7 @@ function renderSearchResults(stars,targetLY){
   geo.setAttribute('color',new THREE.BufferAttribute(colors,3));
 
   const mat=new THREE.PointsMaterial({
-    size:26,map:_glowTexWhite,vertexColors:true,sizeAttenuation:true,
+    size:18,map:_glowTexWhite,vertexColors:true,sizeAttenuation:true,
     transparent:true,depthWrite:false,alphaTest:.01,blending:THREE.AdditiveBlending
   });
   _resultStars=new THREE.Points(geo,mat);
@@ -1158,7 +1261,7 @@ function renderSearchResults(stars,targetLY){
   const lineGeo=new THREE.BufferGeometry();
   lineGeo.setAttribute('position',new THREE.Float32BufferAttribute(linePos,3));
   _focusLines=new THREE.LineSegments(lineGeo,new THREE.LineBasicMaterial({
-    color:0x4d9fff,transparent:true,opacity:0.28
+    color:0x4d9fff,transparent:true,opacity:0.09
   }));
   _world.add(_focusLines);
 
@@ -1168,7 +1271,7 @@ function renderSearchResults(stars,targetLY){
   const pulse=()=>{
     if(!_resultStars)return;
     t+=0.02;
-    mat.size=26+Math.sin(t)*4.5;
+    mat.size=18+Math.sin(t)*2.6;
     _pulseAnimFrame=requestAnimationFrame(pulse);
   };
   pulse();
@@ -1336,7 +1439,8 @@ function resetIdleTimer(){
   },3000);
 }
 
-function showCenterUI(){
+function showCenterUI(forceFull){
+  setCenterCompact(forceFull ? false : _hasExplored);
   document.getElementById('center-ui').classList.add('visible');
   document.getElementById('hud').classList.add('visible');
   document.getElementById('decay-hud').classList.add('visible');
