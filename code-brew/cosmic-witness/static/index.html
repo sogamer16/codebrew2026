@@ -27,11 +27,7 @@ html,body{
 }
 
 #three-debug{
-  position:fixed;left:16px;bottom:16px;z-index:500;
-  min-width:220px;max-width:320px;padding:10px 12px;
-  background:rgba(4,8,24,.88);border:1px solid rgba(77,159,255,.32);border-radius:12px;
-  color:#c8dcff;font:12px/1.45 'Space Mono',monospace;backdrop-filter:blur(10px);
-  box-shadow:0 10px 30px rgba(0,0,0,.28);
+  display:none!important;
 }
 #three-debug.ok{border-color:rgba(34,211,164,.45)}
 #three-debug.warn{border-color:rgba(255,215,0,.45)}
@@ -3324,17 +3320,12 @@ async function runReverseLookup(){
       }
       if(!star) star={name:`${asNum.toFixed(1)} ly — unnamed region`,dist_ly:asNum,spectral_type:'?',constellation:'—'};
     } else {
-      // Try fetching by name: search for it via year-range approach
-      // First try: check if it's a named star in our catalog via a broad search
-      const r=await fetch(`/api/stars?light_years=100&tolerance=0.99`);
+      // Search by star name using the dedicated endpoint (covers full catalog)
+      const r=await fetch(`/api/search-by-name?q=${encodeURIComponent(q)}`);
       const d=await r.json();
-      star=(d.stars||[]).find(s=>(s.name||'').toLowerCase()===q.toLowerCase());
+      star=(d.stars||[])[0]||null;
       if(!star){
-        // Try partial match
-        star=(d.stars||[]).find(s=>(s.name||'').toLowerCase().includes(q.toLowerCase()));
-      }
-      if(!star){
-        resultEl.innerHTML=`<div style="color:#ff8b8b;font-size:.78rem;padding:8px">No star found matching "${q}". Try a distance in light-years (e.g. 8.6) or a well-known star name like Sirius, Vega, Betelgeuse.</div>`;
+        resultEl.innerHTML=`<div style="color:#ff8b8b;font-size:.78rem;padding:8px">No star found matching "${q}". Try a distance in light-years (e.g. <strong>8.6</strong>) or a star name like <strong>Sirius</strong>, <strong>Vega</strong>, <strong>Betelgeuse</strong>, <strong>Polaris</strong>, <strong>Rigel</strong>.</div>`;
         return;
       }
     }

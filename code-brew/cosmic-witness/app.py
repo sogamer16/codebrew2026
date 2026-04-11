@@ -568,6 +568,64 @@ def star_detail(star_name: str):
     return jsonify(info)
 
 
+@app.route("/api/search-by-name")
+def search_by_name():
+    """
+    Search the full star catalog by name (case-insensitive, partial match).
+    Query params:
+      q  — the star name to search for
+    Returns the best matching star (exact match preferred over partial).
+    """
+    q = request.args.get("q", "").strip().lower()
+    if not q:
+        return jsonify({"error": "Missing 'q' parameter"}), 400
+
+    df = load_star_data()
+
+    # Only look at named stars
+    named = df[df["proper"].notna() & (df["proper"].str.strip() != "")].copy()
+    named["proper_lower"] = named["proper"].str.lower().str.strip()
+
+    # Exact match first
+    exact = named[named["proper_lower"] == q]
+    if len(exact) == 0:
+        # Partial match
+        exact = named[named["proper_lower"].str.contains(q, regex=False, na=False)]
+
+    if len(exact) == 0:
+        return jsonify({"found": False, "stars": []})
+
+    # Pick the brightest / closest match
+    exact = exact.copy()
+    exact["_sort"] = exact.get("mag", exact.get("magnitude", pd.Series([99]*len(exact), index=exact.index))).fillna(99)
+    exact = exact.sort_values("_sort")
+    row = exact.iloc[0]
+
+    proper = str(row.get("proper", "")).strip()
+    dist = float(row.get("dist_ly", row.get("dist", 0) * 3.2616))
+    mag = row.get("mag", row.get("magnitude"))
+    spect = row.get("spect", row.get("spectral_type", ""))
+    con = row.get("con", row.get("constellation", ""))
+    hip = row.get("hip")
+
+    star = _normalise_star({
+        "id": int(row.get("id", 0)),
+        "name": proper,
+        "has_proper_name": True,
+        "ra": float(row.get("ra", 0)),
+        "dec": float(row.get("dec", 0)),
+        "dist_ly": round(dist, 2),
+        "magnitude": round(float(mag), 2) if mag is not None and pd.notna(mag) else None,
+        "spectral_type": str(spect).strip() if spect and pd.notna(spect) else "Unknown",
+        "constellation": str(con).strip() if con and pd.notna(con) else "Unknown",
+        "naked_eye_visible": bool(mag is not None and pd.notna(mag) and float(mag) < 6.5),
+        "year_watching": int(CURRENT_YEAR - round(dist)),
+        "hip_id": int(hip) if pd.notna(hip) and float(hip) > 0 else None,
+        "source": "HYG",
+    })
+    return jsonify({"found": True, "stars": [star]})
+
+
 # ---------------------------------------------------------------------------
 # Sky position — "Find It Tonight"
 # ---------------------------------------------------------------------------
@@ -721,6 +779,34 @@ def post_letter(star_id: str):
     letters[star_id].append(entry)
     _save_letters(letters)
     return jsonify({"ok": True, "total": len(letters[star_id])})
+
+
+# ---------------------------------------------------------------------------
+# Frame capture endpoint — for demo GIF assembly
+# ---------------------------------------------------------------------------
+
+FRAMES_DIR = "/sessions/great-dreamy-mccarthy/frames"
+
+@app.route("/api/capture", methods=["POST"])
+def capture_frame():
+    """Accept a base64 PNG frame from the browser and save to disk."""
+    import base64
+    os.makedirs(FRAMES_DIR, exist_ok=True)
+    body = request.get_json(silent=True) or {}
+    data_url = body.get("dataUrl", "")
+    label    = str(body.get("label", "frame"))[:40].replace(" ", "_")
+    idx      = int(body.get("index", 0))
+    # Strip data:image/png;base64, prefix
+    if "," in data_url:
+        data_url = data_url.split(",", 1)[1]
+    try:
+        img_bytes = base64.b64decode(data_url)
+        fname = os.path.join(FRAMES_DIR, f"{idx:03d}_{label}.png")
+        with open(fname, "wb") as f:
+            f.write(img_bytes)
+        return jsonify({"ok": True, "file": fname})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
 
 
 # ---------------------------------------------------------------------------

@@ -7,5 +7,39 @@
       "year": "2026",
       "written": "2026-04-10"
     }
+  ],
+  "36_ophiuchi_a_20": [
+    {
+      "id": 0,
+      "author": "sohaib",
+      "message": "it is seeing my birthday",
+      "year": "2006",
+      "written": "2026-04-11"
+    },
+    {
+      "id": 1,
+      "author": "sohaib",
+      "message": "i was born and the light reached this",
+      "year": "2006",
+      "written": "2026-04-11"
+    }
+  ],
+  "vega_25": [
+    {
+      "id": 0,
+      "author": "you 25 years later",
+      "message": "this is a massage from 2026 work hard and you will succsed",
+      "year": "2001",
+      "written": "2026-04-11"
+    }
+  ],
+  "test-star-1": [
+    {
+      "id": 0,
+      "author": "Test",
+      "message": "Hello from the past",
+      "year": "1969",
+      "written": "2026-04-11"
+    }
   ]
 }
