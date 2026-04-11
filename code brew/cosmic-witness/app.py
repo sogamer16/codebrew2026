@@ -731,4 +731,5 @@ if __name__ == "__main__":
     load_star_data()          # pre-load so first request is instant
     print("\n🚀  Sirius backend running at http://localhost:5000\n")
     print("📡  Catalogs: HYG v3 (local) + SIMBAD TAP + Gaia DR3 TAP\n")
-    app.run(debug=False, port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=False, host="0.0.0.0", port=port)

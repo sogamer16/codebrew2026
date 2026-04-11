@@ -731,10 +731,6 @@ html,body{
   <div class="dh-sub">and will never stop</div>
 </div>
 
-<div id="scene-actions">
-  <button class="scene-btn" onclick="showCenterUI(true)">Search</button>
-  <button class="scene-btn" onclick="refocusScene()">Refocus</button>
-</div>
 
 <!-- Era legend — populated by buildEraLegend() -->
 <div class="era-legend" id="era-legend">
@@ -777,6 +773,10 @@ html,body{
     <div class="di-icon">🔭</div>
     <div class="di-label">Search</div>
   </div>
+  <div class="dock-item" id="dock-refocus" onclick="refocusScene()" title="Refocus">
+    <div class="di-icon">◎</div>
+    <div class="di-label">Refocus</div>
+  </div>
   <div class="dock-item" id="dock-archive" onclick="openPanel('archive')" title="Family Archive">
     <div class="di-icon">✦</div>
     <div class="di-label">Archive</div>
@@ -789,10 +789,6 @@ html,body{
   <div class="dock-item" id="dock-era" onclick="toggleEraMode()" title="Era Mode">
     <div class="di-icon">🏛</div>
     <div class="di-label">Era Mode</div>
-  </div>
-  <div class="dock-item" id="dock-refocus" onclick="refocusScene()" title="Refocus">
-    <div class="di-icon">◎</div>
-    <div class="di-label">Refocus</div>
   </div>
   <div class="dock-item" id="dock-moment" onclick="openModal('custom')" title="Add Moment">
     <div class="di-icon">＋</div>
@@ -1018,7 +1014,7 @@ let _cameraRadius=_defaultRadius,_targetRadius=_defaultRadius;
 let _autoRotSpeed=0.00035;
 let _debugFrameCounter=0;
 let _sceneBootStarted=false;
-let _minCameraRadius=140,_maxCameraRadius=520;
+let _minCameraRadius=140,_maxCameraRadius=1400;
 let _cameraTarget=null,_targetCameraTarget=null;
 let _hasExplored=false,_centerCompact=false;
 
@@ -1141,7 +1137,7 @@ function buildBackgroundStars(){
   const pixPos=new Float32Array(pixN*3),pixCol=new Float32Array(pixN*3);
   for(let i=0;i<pixN;i++){
     const th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1);
-    const r=200+Math.random()*700;
+    const r=400+Math.random()*3000;
     pixPos[i*3  ]=r*Math.sin(ph)*Math.cos(th);
     pixPos[i*3+1]=r*Math.sin(ph)*Math.sin(th);
     pixPos[i*3+2]=r*Math.cos(ph);
@@ -1156,12 +1152,12 @@ function buildBackgroundStars(){
     transparent:true,opacity:0.88,depthWrite:false,blending:THREE.AdditiveBlending,
   })));
 
-  /* ── Layer B: 5 000 glow stars (near) ── */
-  const glowN=5000;
+  /* ── Layer B: 2 000 glow stars — kept well outside the camera orbit zone ── */
+  const glowN=2000;
   const glowPos=new Float32Array(glowN*3),glowCol=new Float32Array(glowN*3);
   for(let i=0;i<glowN;i++){
     const th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1);
-    const r=60+Math.random()*260;
+    const r=400+Math.random()*600; // 400–1000 units, well beyond camera radius
     glowPos[i*3  ]=r*Math.sin(ph)*Math.cos(th);
     glowPos[i*3+1]=r*Math.sin(ph)*Math.sin(th);
     glowPos[i*3+2]=r*Math.cos(ph);
@@ -1172,8 +1168,8 @@ function buildBackgroundStars(){
   glowGeo.setAttribute('position',new THREE.BufferAttribute(glowPos,3));
   glowGeo.setAttribute('color',  new THREE.BufferAttribute(glowCol,3));
   group.add(new THREE.Points(glowGeo,new THREE.PointsMaterial({
-    size:4.5,map:_glowTexWhite,vertexColors:true,sizeAttenuation:true,
-    transparent:true,opacity:0.88,depthWrite:false,alphaTest:0.004,
+    size:6,map:_glowTexWhite,vertexColors:true,sizeAttenuation:true,
+    transparent:true,opacity:0.75,depthWrite:false,alphaTest:0.004,
     blending:THREE.AdditiveBlending,
   })));
 
@@ -1191,7 +1187,7 @@ function buildBackgroundStars(){
     const z0=Math.cos(lat)*Math.sin(lon);
     const y1=y0*Math.cos(galTilt)-z0*Math.sin(galTilt);
     const z1=y0*Math.sin(galTilt)+z0*Math.cos(galTilt);
-    const r=280+Math.random()*500;
+    const r=600+Math.random()*1800;
     mwPos[i*3  ]=x0*r; mwPos[i*3+1]=y1*r; mwPos[i*3+2]=z1*r;
     // Milky Way colour — warm dusty white to blue-white
     const dust=Math.random();
@@ -1211,7 +1207,7 @@ function buildBackgroundStars(){
   const palettes=[[1,.88,.72],[.72,.84,1],[1,.96,.9],[1,.78,.58],[.9,1,.8],[.6,.9,1]];
   for(let i=0;i<heroN;i++){
     const th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1);
-    const r=55+Math.random()*180;
+    const r=350+Math.random()*400; // keep beyond camera orbit zone
     heroPos[i*3  ]=r*Math.sin(ph)*Math.cos(th);
     heroPos[i*3+1]=r*Math.sin(ph)*Math.sin(th);
     heroPos[i*3+2]=r*Math.cos(ph);
@@ -1229,6 +1225,106 @@ function buildBackgroundStars(){
 
   group.userData.starCount=pixN+glowN+mwN+heroN;
   return group;
+}
+
+/* ── Solar System origin marker ── */
+let _solarMarker=null;
+let _solarLabelEl=null;
+
+function buildSolarSystemMarker(){
+  if(!_scene||!_world)return;
+  const group=new THREE.Group();
+
+  // Sun — bright warm white core
+  const sunGeo=new THREE.BufferGeometry();
+  sunGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array([0,0,0]),3));
+  const sunMat=new THREE.PointsMaterial({
+    size:22,sizeAttenuation:false,color:new THREE.Color(1,0.96,0.78),map:_glowTexWhite,
+    transparent:true,opacity:1,depthWrite:false,blending:THREE.AdditiveBlending
+  });
+  group.add(new THREE.Points(sunGeo,sunMat));
+
+  // Sun glow halo
+  const haloGeo=new THREE.BufferGeometry();
+  haloGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array([0,0,0]),3));
+  const haloMat=new THREE.PointsMaterial({
+    size:52,sizeAttenuation:false,color:new THREE.Color(1,0.88,0.5),map:_glowTexWhite,
+    transparent:true,opacity:0.55,depthWrite:false,blending:THREE.AdditiveBlending
+  });
+  group.add(new THREE.Points(haloGeo,haloMat));
+
+  // Outer diffuse glow (world-space, large)
+  const outerGeo=new THREE.BufferGeometry();
+  outerGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array([0,0,0]),3));
+  const outerMat=new THREE.PointsMaterial({
+    size:28,sizeAttenuation:true,color:new THREE.Color(1,0.82,0.3),map:_glowTexWhite,
+    transparent:true,opacity:0.28,depthWrite:false,blending:THREE.AdditiveBlending
+  });
+  group.add(new THREE.Points(outerGeo,outerMat));
+
+  // Faint orbital ring disc — flat circle of dots to hint at the solar system plane
+  const ringN=120;
+  const ringPos=new Float32Array(ringN*3);
+  const ringCol=new Float32Array(ringN*3);
+  for(let i=0;i<ringN;i++){
+    const angle=(i/ringN)*Math.PI*2;
+    const r=8+Math.random()*6;          // radius 8–14 world units (tiny)
+    const jitter=Math.random()*1.5-0.75;
+    ringPos[i*3  ]=Math.cos(angle)*r;
+    ringPos[i*3+1]=jitter;
+    ringPos[i*3+2]=Math.sin(angle)*r;
+    const b=0.3+Math.random()*0.3;
+    ringCol[i*3]=b; ringCol[i*3+1]=b*0.9; ringCol[i*3+2]=b*0.6;
+  }
+  const ringGeo=new THREE.BufferGeometry();
+  ringGeo.setAttribute('position',new THREE.BufferAttribute(ringPos,3));
+  ringGeo.setAttribute('color',new THREE.BufferAttribute(ringCol,3));
+  group.add(new THREE.Points(ringGeo,new THREE.PointsMaterial({
+    size:2.2,vertexColors:true,sizeAttenuation:true,
+    transparent:true,opacity:0.55,depthWrite:false,blending:THREE.AdditiveBlending
+  })));
+
+  _world.add(group);
+  _solarMarker=group;
+
+  // CSS label — "Our Solar System" — shown when zoomed out far
+  const label=document.createElement('div');
+  label.id='solar-label';
+  label.textContent='Our Solar System';
+  label.style.cssText=[
+    'position:fixed;pointer-events:none;z-index:200',
+    'font-family:Orbitron,sans-serif;font-size:.55rem;letter-spacing:.18em;text-transform:uppercase',
+    'color:rgba(255,240,180,.0);text-align:center',
+    'transition:color .4s',
+    'text-shadow:0 0 12px rgba(255,200,80,.5)',
+    'white-space:nowrap',
+  ].join(';');
+  document.body.appendChild(label);
+  _solarLabelEl=label;
+}
+
+function updateSolarLabel(){
+  if(!_solarLabelEl||!_camera||!_renderer)return;
+  // Project origin to screen space
+  const origin=new THREE.Vector3(0,0,0);
+  if(_cameraTarget)origin.copy(_cameraTarget).multiplyScalar(0); // always world origin
+  const projected=origin.clone().project(_camera);
+  const W=window.innerWidth,H=window.innerHeight;
+  const sx=(projected.x*0.5+0.5)*W;
+  const sy=(-(projected.y)*0.5+0.5)*H;
+
+  // Only show when camera is far enough away (radius > 380)
+  const showFrac=Math.max(0,Math.min(1,(_cameraRadius-380)/300));
+  _solarLabelEl.style.color=`rgba(255,235,160,${showFrac*0.75})`;
+  _solarLabelEl.style.left=(sx-60)+'px';
+  _solarLabelEl.style.top=(sy+22)+'px';
+
+  // Pulse the sun glow slightly
+  if(_solarMarker){
+    const t=Date.now()*0.0008;
+    const pulse=0.85+Math.sin(t)*0.15;
+    _solarMarker.children[1].material.opacity=0.55*pulse; // halo
+  }
 }
 
 function loadNeighborCluster(starDatum){
@@ -1396,6 +1492,7 @@ function animateScene(){
   }
   updateCamera();
   _renderer.render(_scene,_camera);
+  updateSolarLabel();
   _debugFrameCounter++;
   if(_debugFrameCounter%20===0){
     setDebugState('ok',{frame:`tick ${_debugFrameCounter}`,status:'rendering'});
@@ -1422,7 +1519,7 @@ function initScene(){
     _cameraTarget=new THREE.Vector3(0,0,0);
     _targetCameraTarget=new THREE.Vector3(0,0,0);
 
-    _camera=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,0.1,5000);
+    _camera=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,0.1,12000);
     _renderer=new THREE.WebGLRenderer({canvas,antialias:false,alpha:false,powerPreference:'high-performance'});
     _renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));
     _renderer.setSize(window.innerWidth,window.innerHeight);
@@ -1439,6 +1536,7 @@ function initScene(){
       try{
         _backgroundStars=buildBackgroundStars();
         _world.add(_backgroundStars);
+        buildSolarSystemMarker();
         setDebugState('warn',{scene:'built',stars:_backgroundStars.userData.starCount||0,status:'scene ready'});
       }catch(err){
         console.error('Background star build failed:',err);
@@ -1510,8 +1608,8 @@ function renderSearchResults(stars,targetLY){
   geo.setAttribute('color',new THREE.BufferAttribute(colors,3));
 
   const mat=new THREE.PointsMaterial({
-    size:18,map:_glowTexWhite,vertexColors:true,sizeAttenuation:true,
-    transparent:true,depthWrite:false,alphaTest:.01,blending:THREE.AdditiveBlending
+    size:28,map:_glowTexWhite,vertexColors:true,sizeAttenuation:true,
+    transparent:true,depthWrite:false,alphaTest:.003,blending:THREE.AdditiveBlending
   });
   _resultStars=new THREE.Points(geo,mat);
   _world.add(_resultStars);
@@ -1549,10 +1647,31 @@ function renderSearchResults(stars,targetLY){
   const pulse=()=>{
     if(!_resultStars)return;
     t+=0.018;
-    mat.size=18+Math.sin(t)*3;
+    mat.size=28+Math.sin(t)*4;
     _pulseAnimFrame=requestAnimationFrame(pulse);
   };
   setTimeout(pulse,700);
+
+  // ── Auto-spawn float cards for the top stars once ripple settles ──
+  setTimeout(()=>{
+    if(!_starData3d.length||!_camera)return;
+    // Pick up to 3 stars sorted by closeness to the searched distance
+    const picks=[..._starData3d]
+      .filter(sd=>sd&&sd.star)
+      .sort((a,b)=>Math.abs(a.star.dist_ly-(targetLY||a.star.dist_ly))-Math.abs(b.star.dist_ly-(targetLY||b.star.dist_ly)))
+      .slice(0,Math.min(3,_starData3d.length));
+    picks.forEach((sd,i)=>{
+      setTimeout(()=>{
+        // Project 3D world position → screen coords for the connector anchor
+        const v=new THREE.Vector3(sd.x,sd.y,sd.z);
+        _world.localToWorld(v);
+        v.project(_camera);
+        const sx=Math.max(60,Math.min((v.x+1)/2*window.innerWidth, window.innerWidth-60));
+        const sy=Math.max(60,Math.min((-v.y+1)/2*window.innerHeight, window.innerHeight-120));
+        spawnFloatCard(sd.star,sx,sy);
+      },i*160);
+    });
+  },820);
 }
 
 function spectralRGB(sp){
@@ -2059,7 +2178,7 @@ function buildEraLegend(){
 }
 
 function highlightActiveLegendEras(){
-  // Highlight which eras are actually present in current results
+  if(!S.currentStars||!S.currentStars.length)return;
   const presentEras=new Set(S.currentStars.map(s=>eraLabel(s.dist_ly)));
   document.querySelectorAll('#era-legend .el-row').forEach(row=>{
     row.classList.toggle('active-era',presentEras.has(row.dataset.era));
@@ -3111,12 +3230,14 @@ function downloadFamilyCertificate(){
   const skyCv=document.getElementById('fm-sky-canvas');
   const skyW=300,skyH=100;
   const skyX=(W-skyW)/2,skyY=148;
+  // roundRect polyfill (Safari/Firefox compat)
+  const _rr=(cx,cy,cw,ch,r)=>{cx.beginPath();cx.moveTo(skyX+r,skyY);cx.lineTo(skyX+cw-r,skyY);cx.arcTo(skyX+cw,skyY,skyX+cw,skyY+r,r);cx.lineTo(skyX+cw,skyY+ch-r);cx.arcTo(skyX+cw,skyY+ch,skyX+cw-r,skyY+ch,r);cx.lineTo(skyX+r,skyY+ch);cx.arcTo(skyX,skyY+ch,skyX,skyY+ch-r,r);cx.lineTo(skyX,skyY+r);cx.arcTo(skyX,skyY,skyX+r,skyY,r);cx.closePath();};
   ctx.save();
-  ctx.beginPath();ctx.roundRect(skyX,skyY,skyW,skyH,8);ctx.clip();
+  _rr(ctx,skyX,skyY,skyW,skyH,8);ctx.clip();
   ctx.drawImage(skyCv,skyX,skyY,skyW,skyH);
   ctx.restore();
   ctx.strokeStyle='rgba(34,211,164,.25)';ctx.lineWidth=1;
-  ctx.beginPath();ctx.roundRect(skyX,skyY,skyW,skyH,8);ctx.stroke();
+  _rr(ctx,skyX,skyY,skyW,skyH,8);ctx.stroke();
 
   // Member list
   const listY=268;
