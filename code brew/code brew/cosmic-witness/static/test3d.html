@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+*{margin:0;padding:0}
+body{background:#ff0000;overflow:hidden}
+canvas{display:block;position:fixed;inset:0}
+#status{position:fixed;top:10px;left:10px;color:white;font-size:20px;z-index:999;background:rgba(0,0,0,.7);padding:10px}
+</style>
+<script src="/static/three.min.js"></script>
+</head>
+<body>
+<div id="status">Loading...</div>
+<canvas id="c"></canvas>
+<script>
+const s=document.getElementById('status');
+try {
+  if(!window.THREE){s.textContent='THREE NOT LOADED';s.style.background='red';}
+  else {
+    s.textContent='THREE OK, building scene...';
+    const scene=new THREE.Scene();
+    const cam=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,1000);
+    cam.position.z=5;
+    const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('c')});
+    renderer.setSize(innerWidth,innerHeight);
+    renderer.setClearColor(0x000044,1);
+    // 1000 white points
+    const geo=new THREE.BufferGeometry();
+    const pos=new Float32Array(3000);
+    for(let i=0;i<3000;i++) pos[i]=(Math.random()-0.5)*20;
+    geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+    const pts=new THREE.Points(geo,new THREE.PointsMaterial({color:0xffffff,size:0.1}));
+    scene.add(pts);
+    renderer.render(scene,cam);
+    s.textContent='THREE OK — stars rendered! Count=1000';
+    s.style.background='green';
+  }
+} catch(e){
+  s.textContent='ERROR: '+e.message;
+  s.style.background='red';
+}
+</script>
+</body>
+</html>

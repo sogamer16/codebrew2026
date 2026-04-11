@@ -1,0 +1,3381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Sirius — The Sky Is a Time Machine</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="/static/three.min.js?v=1775811828"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#ffd700;--accent:#4d9fff;--accent2:#b060ff;--green:#22d3a4;
+  --text:#c8dcff;--dim:#3a5080;--mid:#7a98c8;
+  --glass:rgba(4,8,24,.72);--glass-border:rgba(77,159,255,.18);
+  --dock-h:68px;
+}
+html,body{
+  width:100%;height:100%;overflow:hidden;
+  background:radial-gradient(circle at 50% 35%,#0b1630 0%,#040816 45%,#010208 78%,#000 100%);
+  cursor:none;font-family:'Inter',sans-serif;color:var(--text)
+}
+
+/* ══ SPACE CANVAS — always full-screen ══ */
+#space-canvas{
+  position:fixed;inset:0;width:100%;height:100%;display:block;z-index:2;
+  background:transparent;
+}
+
+#three-debug{
+  position:fixed;left:16px;bottom:16px;z-index:500;
+  min-width:220px;max-width:320px;padding:10px 12px;
+  background:rgba(4,8,24,.88);border:1px solid rgba(77,159,255,.32);border-radius:12px;
+  color:#c8dcff;font:12px/1.45 'Space Mono',monospace;backdrop-filter:blur(10px);
+  box-shadow:0 10px 30px rgba(0,0,0,.28);
+}
+#three-debug.ok{border-color:rgba(34,211,164,.45)}
+#three-debug.warn{border-color:rgba(255,215,0,.45)}
+#three-debug.err{border-color:rgba(255,107,107,.55);color:#ffd7d7}
+#three-debug .td-title{
+  font-family:'Orbitron',sans-serif;font-size:.66rem;letter-spacing:.12em;
+  color:var(--accent);margin-bottom:6px;text-transform:uppercase;
+}
+#three-debug.err .td-title{color:#ff8b8b}
+#three-debug .td-row{display:flex;justify-content:space-between;gap:10px}
+#three-debug .td-key{color:var(--mid)}
+#three-debug .td-val{color:var(--text);text-align:right}
+
+@media (max-width: 720px){
+  #center-ui{width:min(92vw,560px)}
+  #center-ui.compact{
+    top:76px;
+    width:calc(100vw - 28px);
+  }
+  #center-ui.compact #cat-pills{display:none}
+  #scene-actions{top:auto;right:12px;bottom:96px}
+  .scene-btn{padding:10px 12px;font-size:.66rem}
+  #three-debug{left:12px;bottom:88px;min-width:180px;max-width:240px}
+}
+
+/* ══ CUSTOM CURSOR ══ */
+#cursor-ring{
+  position:fixed;width:32px;height:32px;border:1.5px solid rgba(77,159,255,.7);
+  border-radius:50%;pointer-events:none;z-index:9999;
+  transform:translate(-50%,-50%);transition:width .18s,height .18s,border-color .18s;
+}
+#cursor-dot{
+  position:fixed;width:4px;height:4px;background:#fff;border-radius:50%;
+  pointer-events:none;z-index:9999;transform:translate(-50%,-50%);
+}
+#cursor-ring.hovering{width:46px;height:46px;border-color:var(--gold)}
+#cursor-ring.clicking{width:22px;height:22px;border-color:var(--green)}
+
+/* ══ CENTER SEARCH ══ */
+#center-ui{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:200;
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+  opacity:0;transition:opacity .4s cubic-bezier(.16,1,.3,1),transform .35s cubic-bezier(.16,1,.3,1);
+  pointer-events:none;
+  width:min(600px,90vw);
+}
+#center-ui.visible{opacity:1;pointer-events:all}
+#center-ui.compact{
+  top:86px;
+  transform:translate(-50%,0);
+  width:min(420px,92vw);
+  gap:10px;
+}
+#center-ui.compact .logo-mark{font-size:clamp(1rem,2vw,1.35rem);margin-bottom:0}
+#center-ui.compact .logo-sub,
+#center-ui.compact #search-hint{display:none}
+#center-ui.compact #cat-pills{max-width:100%;opacity:.88}
+#center-ui.compact #search-input{padding:13px 48px 13px 18px;font-size:.92rem}
+
+.logo-mark{
+  font-family:'Orbitron',sans-serif;font-size:clamp(1.6rem,4vw,2.6rem);
+  font-weight:900;letter-spacing:.14em;
+  background:linear-gradient(135deg,#fff 20%,var(--accent) 55%,var(--accent2) 90%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:4px;
+}
+.logo-sub{font-size:.72rem;letter-spacing:.22em;color:var(--dim);text-transform:uppercase;margin-bottom:8px}
+
+#search-ring{
+  width:100%;position:relative;
+}
+#search-input{
+  width:100%;padding:16px 52px 16px 22px;
+  background:rgba(4,8,24,.82);
+  border:1px solid rgba(77,159,255,.3);border-radius:50px;
+  color:#fff;font-family:'Inter',sans-serif;font-size:1rem;
+  backdrop-filter:blur(16px);
+  outline:none;transition:border-color .2s,box-shadow .2s;
+}
+#search-input:focus{
+  border-color:rgba(77,159,255,.7);
+  box-shadow:0 0 0 3px rgba(77,159,255,.1),0 0 40px rgba(77,159,255,.12);
+}
+#search-input::placeholder{color:var(--dim)}
+#search-go{
+  position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  width:38px;height:38px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:none;cursor:pointer;color:#fff;font-size:1rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .2s,box-shadow .2s;
+}
+#search-go:hover{transform:translateY(-50%) scale(1.08);box-shadow:0 0 20px rgba(77,159,255,.4)}
+
+#scene-actions{
+  position:fixed;top:18px;right:18px;z-index:320;
+  display:flex;gap:8px;align-items:center;
+}
+.scene-btn{
+  padding:9px 14px;border-radius:999px;
+  border:1px solid rgba(77,159,255,.25);background:rgba(4,8,24,.78);
+  color:var(--text);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;
+  cursor:pointer;backdrop-filter:blur(10px);transition:.18s;
+}
+.scene-btn:hover{border-color:rgba(77,159,255,.45);color:#fff;background:rgba(8,16,40,.9)}
+
+#autocomplete-float{
+  position:absolute;top:calc(100% + 8px);left:0;right:0;
+  background:rgba(4,8,24,.95);border:1px solid var(--glass-border);border-radius:16px;
+  backdrop-filter:blur(16px);overflow:hidden;display:none;z-index:300;max-height:320px;overflow-y:auto;
+}
+#autocomplete-float.open{display:block}
+.ac-item{
+  padding:11px 20px;cursor:pointer;display:flex;align-items:center;gap:10px;
+  transition:background .15s;font-size:.88rem;
+}
+.ac-item:hover{background:rgba(77,159,255,.1)}
+.ac-emoji{font-size:1rem;flex-shrink:0}
+.ac-name{color:var(--text);flex:1}
+.ac-yr{font-family:'Space Mono',monospace;font-size:.68rem;color:var(--dim)}
+.ac-cat{font-size:.58rem;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,.06);color:var(--mid)}
+
+/* Category pills under search */
+#cat-pills{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:4px}
+.cat-pill{
+  padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.04);color:var(--dim);font-size:.65rem;
+  cursor:pointer;transition:all .18s;letter-spacing:.06em;
+}
+.cat-pill:hover,.cat-pill.active{background:rgba(77,159,255,.15);border-color:rgba(77,159,255,.4);color:var(--accent)}
+.cat-pill.cat-indigenous:hover,.cat-pill.cat-indigenous.active{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.35);color:rgba(34,197,94,.9)}
+.cat-pill.cat-culture:hover,.cat-pill.cat-culture.active{background:rgba(168,85,247,.12);border-color:rgba(168,85,247,.35);color:rgba(168,85,247,.9)}
+.cat-pill.cat-civil:hover,.cat-pill.cat-civil.active{background:rgba(251,146,60,.12);border-color:rgba(251,146,60,.35);color:rgba(251,146,60,.9)}
+
+/* Search hint */
+#search-hint{
+  font-size:.7rem;color:var(--dim);letter-spacing:.08em;text-align:center;
+  transition:opacity .3s;
+}
+
+/* ══ FLOATING STAR CARDS ══ */
+.float-card{
+  position:fixed;z-index:400;
+  background:rgba(4,8,24,.92);
+  border:1px solid rgba(77,159,255,.2);border-radius:20px;
+  padding:20px;width:300px;
+  backdrop-filter:blur(20px);
+  box-shadow:0 0 40px rgba(77,159,255,.12),0 20px 60px rgba(0,0,0,.5);
+  cursor:grab;
+  transition:box-shadow .2s,border-color .2s;
+  animation:card-float-in .35s cubic-bezier(.16,1,.3,1) forwards;
+}
+.float-card:active{cursor:grabbing}
+.float-card.pinned{border-color:rgba(255,215,0,.3);box-shadow:0 0 40px rgba(255,215,0,.1),0 20px 60px rgba(0,0,0,.5)}
+@keyframes card-float-in{
+  from{opacity:0;transform:scale(.88) translateY(12px)}
+  to{opacity:1;transform:scale(1) translateY(0)}
+}
+.fc-close{
+  position:absolute;top:10px;right:10px;
+  background:none;border:none;color:var(--dim);font-size:1rem;cursor:pointer;
+  transition:.15s;padding:3px 6px;border-radius:4px;
+}
+.fc-close:hover{color:#fff;background:rgba(255,255,255,.08)}
+.fc-pin{
+  position:absolute;top:10px;right:34px;
+  background:none;border:none;color:var(--dim);font-size:.85rem;cursor:pointer;
+  transition:.15s;padding:3px 6px;border-radius:4px;
+}
+.fc-pin:hover,.fc-pin.on{color:var(--gold)}
+.fc-pin.on{text-shadow:0 0 8px var(--gold)}
+.fc-star-name{
+  font-family:'Orbitron',sans-serif;font-size:.88rem;font-weight:700;
+  color:var(--gold);margin-bottom:3px;padding-right:56px;line-height:1.3;
+}
+.fc-dist{font-size:.68rem;font-family:'Space Mono',monospace;color:var(--dim);margin-bottom:12px}
+.fc-spec{display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.fc-spec-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.fc-spec-lbl{font-size:.68rem;color:var(--mid)}
+.fc-watch{
+  font-size:.73rem;line-height:1.6;color:var(--text);
+  background:rgba(77,159,255,.06);border:1px solid rgba(77,159,255,.12);
+  border-radius:10px;padding:10px 12px;margin-bottom:12px;
+}
+.fc-watch strong{color:var(--gold)}
+.fc-watch .watch-yr{color:var(--accent)}
+.fc-actions{display:flex;flex-wrap:wrap;gap:5px}
+.fc-btn{
+  flex:1;min-width:80px;padding:7px 6px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);
+  border-radius:8px;color:var(--mid);font-size:.65rem;cursor:pointer;
+  transition:all .18s;text-align:center;font-family:'Inter',sans-serif;
+}
+.fc-btn:hover{background:rgba(77,159,255,.1);border-color:rgba(77,159,255,.35);color:var(--accent)}
+.fc-btn.gold{border-color:rgba(255,215,0,.25);color:var(--gold)}
+.fc-btn.gold:hover{background:rgba(255,215,0,.1);border-color:rgba(255,215,0,.5)}
+.fc-btn.green{border-color:rgba(34,211,164,.25);color:var(--green)}
+.fc-btn.green:hover{background:rgba(34,211,164,.1);border-color:rgba(34,211,164,.4)}
+
+/* connector line from card to star */
+.star-connector{
+  position:fixed;pointer-events:none;z-index:395;
+  stroke:rgba(77,159,255,.3);stroke-width:1;stroke-dasharray:4 4;fill:none;
+}
+
+/* ══ BOTTOM DOCK ══ */
+#dock{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  z-index:500;
+  display:flex;align-items:flex-end;justify-content:center;
+  gap:8px;
+  padding:10px 20px 12px;
+  background:rgba(4,8,24,.75);
+  backdrop-filter:blur(20px);
+  border:1px solid rgba(77,159,255,.12);
+  border-bottom:none;
+  border-radius:20px 20px 0 0;
+  opacity:0;transform:translateX(-50%) translateY(100%);
+  transition:opacity .35s cubic-bezier(.16,1,.3,1),transform .35s cubic-bezier(.16,1,.3,1);
+  pointer-events:none;
+}
+#dock.visible{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:all}
+
+.dock-item{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:8px 14px;border-radius:14px;cursor:pointer;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  transition:all .2s;min-width:60px;
+  color:var(--dim);
+}
+.dock-item:hover{background:rgba(77,159,255,.12);border-color:rgba(77,159,255,.3);color:var(--accent);transform:translateY(-4px)}
+.dock-item.active{background:rgba(77,159,255,.18);border-color:rgba(77,159,255,.45);color:var(--accent)}
+.dock-item.gold:hover,.dock-item.gold.active{background:rgba(255,215,0,.1);border-color:rgba(255,215,0,.3);color:var(--gold)}
+.di-icon{font-size:1.4rem;line-height:1}
+.di-label{font-size:.55rem;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+
+/* Dock divider */
+.dock-sep{width:1px;height:36px;background:rgba(255,255,255,.08);align-self:center;margin:0 4px}
+
+/* ══ TOP HINT BAR (hover zone) ══ */
+#top-hint{
+  position:fixed;top:0;left:0;right:0;height:4px;z-index:450;
+  background:transparent;cursor:default;
+}
+
+/* ══ HOVER ZONES — invisible triggers ══ */
+#dock-zone{position:fixed;bottom:0;left:0;right:0;height:80px;z-index:490;pointer-events:all}
+#search-zone{position:fixed;top:0;left:0;right:0;bottom:0;z-index:100;pointer-events:none}
+
+/* ══ HUD — top-left status ══ */
+#hud{
+  position:fixed;top:20px;left:24px;z-index:200;
+  opacity:0;transition:opacity .3s;pointer-events:none;
+}
+#hud.visible{opacity:1}
+.hud-logo{
+  font-family:'Orbitron',sans-serif;font-size:.75rem;font-weight:900;
+  letter-spacing:.18em;
+  background:linear-gradient(135deg,#fff,var(--accent));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:4px;
+}
+.hud-event{font-size:.65rem;color:var(--dim);max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hud-stars{font-size:.6rem;font-family:'Space Mono',monospace;color:rgba(77,159,255,.6);margin-top:2px}
+
+/* ══ DECAY COUNTER — top-right ══ */
+#decay-hud{
+  position:fixed;top:20px;right:24px;z-index:200;
+  text-align:right;opacity:0;transition:opacity .4s;pointer-events:none;
+}
+#decay-hud.visible{opacity:1}
+.dh-label{font-size:.55rem;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;margin-bottom:3px}
+.dh-ticker{font-family:'Space Mono',monospace;font-size:.8rem;color:var(--accent)}
+.dh-ticker .dn{color:#fff;font-weight:700}
+.dh-sub{font-size:.52rem;color:var(--dim);margin-top:2px}
+
+/* ══ MODAL OVERLAY ══ */
+.modal-overlay{
+  position:fixed;inset:0;z-index:700;
+  background:rgba(2,3,12,.82);backdrop-filter:blur(10px);
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.open{display:flex}
+.modal-box{
+  background:#080e24;border:1px solid rgba(61,143,255,.2);border-radius:20px;
+  padding:32px;max-width:580px;width:100%;max-height:90vh;overflow-y:auto;
+  animation:modal-in .3s cubic-bezier(.16,1,.3,1);position:relative;
+}
+@keyframes modal-in{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+.modal-close{position:absolute;top:14px;right:14px;background:none;border:none;
+  color:var(--dim);font-size:1.4rem;cursor:pointer;line-height:1;transition:.2s}
+.modal-close:hover{color:var(--text)}
+.modal-title{font-family:'Orbitron',sans-serif;font-size:1.1rem;font-weight:700;color:var(--gold);margin-bottom:6px}
+.modal-sub{font-size:.82rem;color:var(--mid);margin-bottom:20px;line-height:1.6}
+
+/* ══ PANEL MODAL (for archive, compare, etc.) ══ */
+#panel-overlay{
+  position:fixed;inset:0;z-index:600;
+  background:rgba(2,3,12,.88);backdrop-filter:blur(14px);
+  display:none;flex-direction:column;
+  padding:24px;padding-bottom:calc(var(--dock-h) + 24px);
+}
+#panel-overlay.open{display:flex}
+#panel-header{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;
+}
+#panel-title{font-family:'Orbitron',sans-serif;font-size:1.1rem;font-weight:700;color:var(--gold)}
+#panel-close{background:none;border:1px solid var(--glass-border);border-radius:8px;padding:6px 14px;
+  color:var(--mid);font-size:.75rem;cursor:pointer;transition:.2s;font-family:'Orbitron',sans-serif}
+#panel-close:hover{border-color:var(--accent);color:var(--accent)}
+#panel-content{flex:1;overflow-y:auto}
+
+/* ══ ARCHIVE STYLES ══ */
+.archive-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.archive-card{
+  background:rgba(8,14,36,.95);border:1px solid rgba(255,215,0,.12);border-radius:14px;
+  padding:16px;position:relative;transition:border-color .2s;
+}
+.archive-card:hover{border-color:rgba(255,215,0,.28)}
+.ac-emoji{font-size:1.5rem;display:block;margin-bottom:6px}
+.ac-name{font-family:'Orbitron',sans-serif;font-size:.82rem;font-weight:700;color:var(--gold);margin-bottom:2px}
+.ac-date{font-size:.66rem;font-family:'Space Mono',monospace;color:var(--dim);margin-bottom:8px}
+.ac-note{font-size:.72rem;color:var(--mid);line-height:1.5;margin-bottom:10px;font-style:italic}
+.ac-witness{font-size:.68rem;color:var(--text);background:rgba(77,159,255,.07);border:1px solid rgba(77,159,255,.14);border-radius:7px;padding:7px 10px;line-height:1.55}
+.ac-witness strong{color:var(--accent)}
+.ac-delete{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--dim);font-size:.85rem;cursor:pointer;opacity:.5;transition:.2s;padding:2px 5px;border-radius:4px}
+.ac-delete:hover{opacity:1;color:#ff6b6b}
+.archive-empty{text-align:center;padding:60px 20px;color:var(--dim);font-size:.82rem;line-height:2}
+
+/* World moments */
+.world-divider{display:flex;align-items:center;gap:12px;margin:24px 0 14px}
+.world-divider::before,.world-divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.07)}
+.world-divider span{font-size:.58rem;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;white-space:nowrap}
+
+/* Preservation note */
+.preservation-bar{
+  text-align:center;padding:14px;font-size:.68rem;color:var(--dim);
+  border-top:1px solid rgba(255,255,255,.06);margin-top:16px;letter-spacing:.06em;line-height:1.7;
+}
+.preservation-bar em{color:var(--accent);font-style:normal}
+
+/* ══ CERT / SHARE MODAL CANVAS ══ */
+.gen-preview{width:100%;border-radius:10px;margin-bottom:16px;display:block}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:10px}
+.btn{padding:9px 20px;border-radius:9px;font-size:.78rem;cursor:pointer;font-family:'Inter',sans-serif;border:none;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.btn-primary:hover{filter:brightness(1.1);box-shadow:0 0 20px rgba(77,159,255,.3)}
+.btn-ghost{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:var(--mid)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Cert style picker */
+.cert-style-picker{display:flex;gap:8px;margin-bottom:14px}
+.csp-btn{flex:1;padding:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--dim);font-size:.7rem;cursor:pointer;font-family:'Inter',sans-serif;text-align:center;line-height:1.4;transition:.2s}
+.csp-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(255,215,0,.07)}
+
+/* ══ CUSTOM EVENT FORM ══ */
+.ce-form{display:flex;flex-direction:column;gap:14px}
+.ce-label{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:5px}
+.ce-input{
+  width:100%;padding:10px 14px;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1);border-radius:9px;
+  color:var(--text);font-family:'Inter',sans-serif;font-size:.88rem;outline:none;transition:.2s;
+}
+.ce-input:focus{border-color:rgba(77,159,255,.5);background:rgba(77,159,255,.05)}
+.date-inputs{display:flex;align-items:center;gap:8px}
+.date-field{padding:9px 10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--text);font-family:'Space Mono',monospace;font-size:.82rem;outline:none;transition:.2s}
+.date-field:focus{border-color:rgba(77,159,255,.5)}
+.date-sep{color:var(--dim);font-size:1.1rem}
+.era-toggle{padding:8px 12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--mid);font-size:.75rem;cursor:pointer;transition:.2s;font-family:'Space Mono',monospace}
+.era-toggle.bce{background:rgba(176,96,255,.1);border-color:rgba(176,96,255,.3);color:var(--accent2)}
+
+/* ══ STORY CARD MODAL ══ */
+#modal-story .modal-box{max-width:540px;padding:0;background:transparent;border:none}
+.sc-card{
+  background:linear-gradient(160deg,#08102a 0%,#040818 60%,#0a0618 100%);
+  border:1px solid rgba(255,215,0,.2);border-radius:20px;padding:34px 30px 26px;position:relative;overflow:hidden;
+}
+.sc-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 40% at 50% -10%,rgba(77,159,255,.12),transparent),radial-gradient(ellipse 60% 50% at 100% 100%,rgba(176,96,255,.08),transparent);pointer-events:none}
+#sc-stars-canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.4;pointer-events:none}
+.sc-top-label{font-size:.56rem;letter-spacing:.2em;color:var(--dim);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.sc-top-label::before,.sc-top-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.07)}
+.sc-headline{font-family:'Orbitron',sans-serif;font-size:clamp(.95rem,3vw,1.3rem);font-weight:900;color:var(--gold);line-height:1.25;margin-bottom:5px}
+.sc-sub{font-size:.76rem;color:var(--mid);margin-bottom:18px;line-height:1.5}
+.sc-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,215,0,.2),transparent);margin:16px 0}
+.sc-narrative{font-size:.8rem;line-height:1.75;color:var(--text);font-style:italic;position:relative;padding-left:16px}
+.sc-narrative::before{content:'"';position:absolute;left:0;top:-4px;font-size:2rem;color:rgba(255,215,0,.25);line-height:1}
+.sc-witness-row{display:flex;align-items:center;gap:10px;margin-top:18px;background:rgba(77,159,255,.07);border:1px solid rgba(77,159,255,.15);border-radius:10px;padding:11px 13px}
+.sc-star-dot{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.sc-witness-text{font-size:.73rem;line-height:1.55;color:var(--text)}
+.sc-witness-text strong{color:var(--gold)}
+.sc-eternal{text-align:center;margin-top:18px;font-size:.6rem;letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
+.sc-actions{display:flex;gap:8px;margin-top:18px;justify-content:flex-end;position:relative;z-index:1}
+.sc-close{position:absolute;top:11px;right:11px;background:none;border:none;color:var(--dim);font-size:1.2rem;cursor:pointer;transition:.2s;line-height:1;padding:4px;z-index:2}
+.sc-close:hover{color:var(--text)}
+
+/* ══ ARCHIVE ADD ══ */
+.aa-emoji-picker{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.aa-emoji-btn{font-size:1.2rem;padding:4px 8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:6px;cursor:pointer;transition:.15s}
+.aa-emoji-btn.selected{background:rgba(255,215,0,.15);border-color:rgba(255,215,0,.4)}
+
+/* ══ FRAGILITY PANEL ══ */
+.fragility-bar{
+  position:fixed;bottom:calc(var(--dock-h) + 10px);left:50%;transform:translateX(-50%);
+  z-index:300;
+  background:rgba(4,3,14,.88);border:1px solid rgba(255,107,107,.18);border-radius:12px;
+  padding:12px 18px;max-width:560px;width:90%;
+  opacity:0;transition:opacity .4s;pointer-events:none;
+  backdrop-filter:blur(12px);
+}
+.fragility-bar.visible{opacity:1;pointer-events:all}
+.fb-label{font-size:.54rem;letter-spacing:.16em;color:rgba(255,107,107,.6);text-transform:uppercase;margin-bottom:5px}
+.fb-stat{font-size:.74rem;color:var(--text);line-height:1.6}
+.fb-stat em{color:rgba(255,107,107,.85);font-style:normal;font-weight:600}
+
+/* ══ FIND IT TONIGHT ══ */
+#fit-modal{display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);align-items:center;justify-content:center}
+#fit-modal.open{display:flex}
+.fit-box{background:rgba(4,8,24,.96);border:1px solid rgba(77,159,255,.28);border-radius:22px;padding:28px 30px;max-width:480px;width:92%;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.fit-title{font-family:'Orbitron',sans-serif;font-size:.9rem;letter-spacing:.15em;color:var(--accent);margin-bottom:18px;text-transform:uppercase}
+.fit-close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--dim);font-size:1.1rem;cursor:pointer}
+.fit-sky{width:100%;height:200px;border-radius:14px;background:radial-gradient(ellipse at 50% 110%,#0a1a35 0%,#020812 60%,#000 100%);position:relative;overflow:hidden;margin:14px 0;border:1px solid rgba(77,159,255,.12)}
+.fit-horizon{position:absolute;bottom:0;left:0;right:0;height:32%;background:linear-gradient(to top,rgba(6,20,50,.9),transparent);border-top:1px solid rgba(77,159,255,.18)}
+.fit-star-dot{position:absolute;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle,#fff 0%,rgba(77,159,255,.8) 45%,transparent 100%);transform:translate(-50%,-50%);box-shadow:0 0 12px 4px rgba(77,159,255,.5);transition:all .8s cubic-bezier(.16,1,.3,1)}
+.fit-compass{width:14px;height:14px;border-radius:50%;background:#fff;position:absolute;bottom:8px;transform:translateX(-50%);box-shadow:0 0 8px rgba(255,255,255,.6)}
+.fit-stat{font-size:.78rem;color:var(--text);line-height:1.8}
+.fit-stat strong{color:#fff}
+.fit-stat .fit-dir{font-family:'Orbitron',sans-serif;font-size:1.1rem;color:var(--accent);letter-spacing:.1em}
+.fit-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;font-family:'Orbitron',sans-serif;margin-bottom:10px}
+.fit-badge.visible{background:rgba(34,211,164,.12);border:1px solid rgba(34,211,164,.35);color:#22d3a4}
+.fit-badge.hidden{background:rgba(255,107,107,.1);border:1px solid rgba(255,107,107,.3);color:rgba(255,107,107,.8)}
+.fit-input-row{display:flex;gap:10px;margin-bottom:16px;align-items:center}
+.fit-input{flex:1;padding:10px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:var(--text);font-family:'Space Mono',monospace;font-size:.82rem;outline:none}
+.fit-btn{padding:10px 20px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;color:#fff;font-family:'Orbitron',sans-serif;font-size:.7rem;cursor:pointer;letter-spacing:.06em;white-space:nowrap}
+
+/* ══ STAR LETTERS ══ */
+#letters-modal{display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);align-items:center;justify-content:center}
+#letters-modal.open{display:flex}
+.letters-box{background:rgba(4,8,24,.96);border:1px solid rgba(176,96,255,.25);border-radius:22px;padding:28px 30px;max-width:500px;width:92%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.letters-title{font-family:'Orbitron',sans-serif;font-size:.9rem;letter-spacing:.15em;color:var(--accent2);margin-bottom:6px;text-transform:uppercase}
+.letters-sub{font-size:.7rem;color:var(--dim);margin-bottom:18px;line-height:1.6}
+.letters-close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--dim);font-size:1.1rem;cursor:pointer}
+.letter-card{background:rgba(255,255,255,.03);border:1px solid rgba(176,96,255,.12);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.letter-author{font-size:.62rem;letter-spacing:.1em;color:var(--accent2);text-transform:uppercase;margin-bottom:5px;font-family:'Orbitron',sans-serif}
+.letter-msg{font-size:.78rem;color:var(--text);line-height:1.65;font-style:italic}
+.letter-meta{font-size:.58rem;color:var(--dim);margin-top:6px}
+.letter-form{margin-top:18px;border-top:1px solid rgba(255,255,255,.06);padding-top:18px}
+.letter-form textarea{width:100%;padding:12px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(176,96,255,.2);border-radius:10px;color:var(--text);font-size:.78rem;font-family:'Inter',sans-serif;outline:none;resize:vertical;min-height:80px}
+.letter-form input{width:100%;padding:9px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--text);font-size:.78rem;font-family:'Inter',sans-serif;outline:none;margin-bottom:8px}
+.letter-submit{width:100%;padding:11px;background:linear-gradient(135deg,#7b2fff,#b060ff);border:none;border-radius:10px;color:#fff;font-family:'Orbitron',sans-serif;font-size:.72rem;letter-spacing:.08em;cursor:pointer;margin-top:10px}
+.letters-empty{text-align:center;padding:28px 0;color:var(--dim);font-size:.78rem}
+
+/* ══ FAMILY CONSTELLATION ══ */
+#family-modal{display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);align-items:center;justify-content:center}
+#family-modal.open{display:flex}
+.family-box{background:rgba(4,8,24,.97);border:1px solid rgba(34,211,164,.35);border-radius:22px;padding:24px 26px 28px;max-width:580px;width:94%;max-height:88vh;overflow-y:auto;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.8)}
+.family-sub{font-size:.72rem;color:var(--mid);margin-bottom:16px;line-height:1.65}
+.family-close{position:absolute;top:14px;right:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:4px 10px;color:#c8dcff;font-size:.9rem;cursor:pointer;transition:.2s}
+.family-close:hover{background:rgba(255,100,100,.12);border-color:rgba(255,100,100,.3);color:#ff9b9b}
+/* tabs */
+.fm-tabs{display:flex;gap:8px;margin-bottom:18px}
+.fm-tab{flex:1;padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:var(--mid);font-size:.72rem;cursor:pointer;font-family:'Orbitron',sans-serif;letter-spacing:.05em;transition:.2s;text-align:center}
+.fm-tab.active{background:rgba(34,211,164,.12);border-color:rgba(34,211,164,.5);color:var(--green)}
+.fm-tab:hover:not(.active){background:rgba(255,255,255,.07);color:var(--text)}
+/* member rows */
+.fm-member-row{display:flex;gap:8px;margin-bottom:9px;align-items:center}
+.fm-name-in{flex:1.8;padding:9px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:9px;color:#e8f0ff;font-family:'Inter',sans-serif;font-size:.82rem;outline:none;transition:.2s}
+.fm-name-in:focus{border-color:rgba(34,211,164,.55);background:rgba(34,211,164,.05)}
+.fm-date-group{display:flex;gap:5px;align-items:center;flex:2}
+.fm-day-in,.fm-mon-in{padding:8px 6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;color:#c8dcff;font-family:'Space Mono',monospace;font-size:.76rem;outline:none;cursor:pointer;transition:.2s}
+.fm-day-in{width:54px}
+.fm-mon-in{width:62px}
+.fm-day-in:focus,.fm-mon-in:focus{border-color:rgba(34,211,164,.5)}
+.fm-year-in{flex:1;padding:8px 8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;color:#c8dcff;font-family:'Space Mono',monospace;font-size:.76rem;outline:none;transition:.2s;min-width:0}
+.fm-year-in:focus{border-color:rgba(34,211,164,.5)}
+.fm-remove{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:7px;padding:6px 8px;color:#5a7090;font-size:.82rem;cursor:pointer;flex-shrink:0;transition:.2s;line-height:1}
+.fm-remove:hover{background:rgba(255,80,80,.1);border-color:rgba(255,80,80,.3);color:#ff8b8b}
+.fm-row-btns{display:flex;gap:10px;margin:10px 0 18px}
+.fm-add-btn{flex:1;padding:10px;background:rgba(34,211,164,.08);border:1.5px solid rgba(34,211,164,.4);border-radius:9px;color:#22d3a4;font-size:.74rem;cursor:pointer;font-family:'Orbitron',sans-serif;letter-spacing:.04em;transition:.2s}
+.fm-add-btn:hover{background:rgba(34,211,164,.16);border-color:rgba(34,211,164,.65)}
+.fm-go-btn{flex:2.2;padding:10px 18px;background:linear-gradient(135deg,#1aaa84,#2d7fd6);border:none;border-radius:9px;color:#fff;font-family:'Orbitron',sans-serif;font-size:.78rem;letter-spacing:.06em;cursor:pointer;transition:.2s;box-shadow:0 4px 18px rgba(34,211,164,.2)}
+.fm-go-btn:hover{filter:brightness(1.14);box-shadow:0 6px 22px rgba(34,211,164,.3)}
+#fm-sky-wrap{border-radius:12px;overflow:hidden;background:#000;margin-bottom:14px;border:1px solid rgba(34,211,164,.15)}
+#fm-sky-canvas{width:100%;height:210px;display:block}
+.fm-star-cards{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.fm-star-card{background:rgba(20,40,60,.6);border:1px solid rgba(34,211,164,.18);border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start}
+.fm-star-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.fm-star-info{flex:1;min-width:0}
+.fm-star-person{font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--green);font-family:'Orbitron',sans-serif;margin-bottom:2px}
+.fm-star-name{font-size:.88rem;font-weight:600;color:var(--gold);margin-bottom:2px}
+.fm-star-dist{font-size:.64rem;font-family:'Space Mono',monospace;color:var(--dim);margin-bottom:5px}
+.fm-star-sky{font-size:.7rem;color:var(--mid);line-height:1.7}
+.fm-find-tip{font-size:.68rem;color:var(--text);background:rgba(77,159,255,.06);border:1px solid rgba(77,159,255,.14);border-radius:7px;padding:6px 10px;margin-top:6px;line-height:1.6}
+.fm-action-row{display:flex;gap:10px}
+.fm-action-btn{flex:1;padding:11px;border-radius:10px;font-family:'Orbitron',sans-serif;font-size:.72rem;letter-spacing:.06em;cursor:pointer;border:none;transition:.2s}
+.fm-3d-btn{background:rgba(77,159,255,.14);border:1.5px solid rgba(77,159,255,.45);color:#6ab8ff}
+.fm-3d-btn:hover{background:rgba(77,159,255,.24);box-shadow:0 0 18px rgba(77,159,255,.2)}
+.fm-cert-btn{background:rgba(255,215,0,.1);border:1.5px solid rgba(255,215,0,.45);color:#ffd700}
+.fm-cert-btn:hover{background:rgba(255,215,0,.18);box-shadow:0 0 18px rgba(255,215,0,.18)}
+#fm-loading{text-align:center;padding:24px 0;color:var(--mid);font-size:.8rem;letter-spacing:.04em}
+#fm-error{color:#ff8b8b;font-size:.74rem;padding:8px 0;display:none;background:rgba(255,80,80,.06);border-radius:8px;padding:8px 12px;margin-bottom:8px}
+/* reverse lookup */
+.rl-input-row{display:flex;gap:10px;margin-bottom:16px}
+.rl-input{flex:1;padding:10px 14px;background:rgba(255,255,255,.06);border:1.5px solid rgba(77,159,255,.25);border-radius:10px;color:#e8f0ff;font-family:'Inter',sans-serif;font-size:.84rem;outline:none;transition:.2s}
+.rl-input:focus{border-color:rgba(77,159,255,.6);background:rgba(77,159,255,.05)}
+.rl-btn{padding:10px 20px;background:linear-gradient(135deg,#1a5aa8,#2d3fa8);border:none;border-radius:10px;color:#fff;font-family:'Orbitron',sans-serif;font-size:.74rem;letter-spacing:.06em;cursor:pointer;white-space:nowrap;transition:.2s}
+.rl-btn:hover{filter:brightness(1.15)}
+.rl-card{background:rgba(10,20,45,.8);border:1px solid rgba(77,159,255,.2);border-radius:14px;padding:18px 20px}
+.rl-star-name{font-family:'Orbitron',sans-serif;font-size:1.1rem;font-weight:700;color:var(--gold);margin-bottom:4px}
+.rl-watching{font-size:.78rem;color:var(--mid);margin-bottom:12px;line-height:1.6}
+.rl-year-big{font-family:'Orbitron',sans-serif;font-size:2.2rem;font-weight:900;color:#fff;letter-spacing:.06em;line-height:1}
+.rl-era{display:inline-block;margin:6px 0 12px;padding:3px 12px;border-radius:20px;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;font-family:'Orbitron',sans-serif}
+.rl-search-btn{width:100%;margin-top:12px;padding:10px;background:rgba(77,159,255,.1);border:1.5px solid rgba(77,159,255,.35);border-radius:9px;color:#6ab8ff;font-family:'Orbitron',sans-serif;font-size:.72rem;letter-spacing:.06em;cursor:pointer;transition:.2s}
+.rl-search-btn:hover{background:rgba(77,159,255,.2)}
+
+/* ══ PDF EXPORT / MISC BUTTONS ══ */
+.pdf-export-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(255,215,0,.07);border:1px solid rgba(255,215,0,.25);border-radius:9px;color:var(--gold);font-size:.72rem;cursor:pointer;font-family:'Orbitron',sans-serif;letter-spacing:.06em;transition:all .2s}
+.pdf-export-btn:hover{background:rgba(255,215,0,.13);box-shadow:0 0 18px rgba(255,215,0,.12)}
+.archive-add-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 22px;background:rgba(255,215,0,.07);border:1px solid rgba(255,215,0,.3);border-radius:10px;color:var(--gold);font-size:.78rem;cursor:pointer;font-family:'Orbitron',sans-serif;letter-spacing:.06em;transition:all .2s}
+.archive-add-btn:hover{background:rgba(255,215,0,.12);box-shadow:0 0 20px rgba(255,215,0,.15)}
+
+/* Audio */
+.audio-record-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:var(--dim);font-size:.68rem;cursor:pointer;transition:.2s;margin-top:8px}
+.audio-record-btn:hover{border-color:rgba(255,107,107,.4);color:rgba(255,107,107,.8)}
+.audio-record-btn.recording{border-color:rgba(255,107,107,.7);color:rgba(255,107,107,.9);animation:pulse-rec .9s infinite}
+@keyframes pulse-rec{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(77,159,255,.2);border-radius:2px}
+
+/* Era legend */
+.era-legend{
+  position:fixed;bottom:calc(var(--dock-h) + 16px);left:50%;transform:translateX(-50%);
+  z-index:300;background:rgba(4,8,24,.92);backdrop-filter:blur(12px);
+  border:1px solid rgba(77,159,255,.25);border-radius:12px;
+  padding:10px 18px;display:none;flex-wrap:wrap;gap:10px 16px;
+  max-width:min(96vw,560px);box-shadow:0 8px 30px rgba(0,0,0,.4)
+}
+.era-legend.visible{display:flex}
+.era-legend-title{width:100%;font-family:'Orbitron',sans-serif;font-size:.52rem;letter-spacing:.18em;color:rgba(77,159,255,.55);text-transform:uppercase;margin-bottom:2px}
+.el-row{display:flex;align-items:center;gap:5px;font-size:.62rem;color:var(--mid);white-space:nowrap}
+.el-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.el-row.active-era{color:#fff;font-weight:600}
+
+/* Watch status colours */
+.watch-yr{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<!-- Custom cursor -->
+<div id="cursor-ring"></div>
+<div id="cursor-dot"></div>
+
+<!-- Full-screen 3D space canvas -->
+<canvas id="space-canvas"></canvas>
+<div id="three-debug" class="warn">
+  <div class="td-title">Three Debug</div>
+  <div class="td-row"><span class="td-key">script</span><span class="td-val" id="dbg-script">pending</span></div>
+  <div class="td-row"><span class="td-key">renderer</span><span class="td-val" id="dbg-renderer">pending</span></div>
+  <div class="td-row"><span class="td-key">scene</span><span class="td-val" id="dbg-scene">pending</span></div>
+  <div class="td-row"><span class="td-key">bg stars</span><span class="td-val" id="dbg-stars">0</span></div>
+  <div class="td-row"><span class="td-key">frame</span><span class="td-val" id="dbg-frame">idle</span></div>
+  <div class="td-row"><span class="td-key">status</span><span class="td-val" id="dbg-status">booting</span></div>
+</div>
+
+<!-- ══ FIND IT TONIGHT MODAL ══ -->
+<div id="fit-modal">
+  <div class="fit-box">
+    <button class="fit-close" onclick="closeFindItTonight()">✕</button>
+    <div class="fit-title">🔭 Find It Tonight</div>
+    <p style="font-size:.72rem;color:var(--dim);margin-bottom:14px;line-height:1.6">Enter any year or event date — we'll show you exactly where in tonight's sky to look to see the star receiving that light right now.</p>
+    <div class="fit-input-row">
+      <input class="fit-input" id="fit-year" type="number" placeholder="Year (e.g. 1969)" min="-10000" max="2025"/>
+      <button class="fit-btn" onclick="runFindItTonight()">Find</button>
+    </div>
+    <div id="fit-result" style="display:none">
+      <div id="fit-badge" class="fit-badge visible">Visible Now</div>
+      <div class="fit-sky" id="fit-sky">
+        <div class="fit-horizon"></div>
+        <div class="fit-star-dot" id="fit-star-dot"></div>
+        <canvas id="fit-sky-canvas" style="position:absolute;inset:0;width:100%;height:100%;opacity:.4;pointer-events:none"></canvas>
+      </div>
+      <div class="fit-stat" id="fit-stat"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ STAR LETTERS MODAL ══ -->
+<div id="letters-modal">
+  <div class="letters-box">
+    <button class="letters-close" onclick="closeStarLetters()">✕</button>
+    <div class="letters-title">✉️ Star Letters</div>
+    <div class="letters-sub" id="letters-sub">Messages left on this star across time. Future visitors will find yours here.</div>
+    <div id="letters-list"></div>
+    <div class="letter-form">
+      <input id="letter-author" placeholder="Your name (optional)" maxlength="60"/>
+      <input id="letter-year" placeholder="The year you're writing about (optional)" maxlength="20"/>
+      <textarea id="letter-msg" placeholder="Write your letter to whoever finds this star next…" maxlength="1000"></textarea>
+      <button class="letter-submit" onclick="submitLetter()">Leave Your Letter on This Star ✦</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FAMILY CONSTELLATION MODAL ══ -->
+<div id="family-modal">
+  <div class="family-box">
+    <button class="family-close" onclick="closeFamilyConstellation()">✕</button>
+
+    <!-- Tab bar -->
+    <div class="fm-tabs">
+      <button class="fm-tab active" id="fm-tab-map" onclick="fmSwitchTab('map')">🌌 Family Map</button>
+      <button class="fm-tab" id="fm-tab-lookup" onclick="fmSwitchTab('lookup')">🔭 Reverse Lookup</button>
+    </div>
+
+    <!-- ── TAB: FAMILY MAP ── -->
+    <div id="fm-tab-map-content">
+      <p class="family-sub">Enter your family members' full birth dates. We'll find which real star is receiving the light from each birth <em>right now</em> — and draw your unique constellation.</p>
+      <div id="fm-members">
+        <div class="fm-member-row">
+          <input class="fm-name-in" placeholder="Name (e.g. Mum)" maxlength="30"/>
+          <div class="fm-date-group">
+            <select class="fm-day-in"><option value="">DD</option></select>
+            <select class="fm-mon-in">
+              <option value="">Mon</option>
+              <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option>
+              <option value="4">Apr</option><option value="5">May</option><option value="6">Jun</option>
+              <option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option>
+              <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
+            </select>
+            <input class="fm-year-in" type="number" placeholder="YYYY" min="1800" max="2026"/>
+          </div>
+          <button class="fm-remove" onclick="fmRemoveRow(this)" title="Remove">✕</button>
+        </div>
+        <div class="fm-member-row">
+          <input class="fm-name-in" placeholder="Name (e.g. Dad)" maxlength="30"/>
+          <div class="fm-date-group">
+            <select class="fm-day-in"><option value="">DD</option></select>
+            <select class="fm-mon-in">
+              <option value="">Mon</option>
+              <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option>
+              <option value="4">Apr</option><option value="5">May</option><option value="6">Jun</option>
+              <option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option>
+              <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
+            </select>
+            <input class="fm-year-in" type="number" placeholder="YYYY" min="1800" max="2026"/>
+          </div>
+          <button class="fm-remove" onclick="fmRemoveRow(this)" title="Remove">✕</button>
+        </div>
+      </div>
+      <div class="fm-row-btns">
+        <button class="fm-add-btn" onclick="fmAddRow()">＋ Add person</button>
+        <button class="fm-go-btn" onclick="runFamilyConstellation()">Map Constellation ✦</button>
+      </div>
+      <div id="fm-error"></div>
+      <div id="fm-loading" style="display:none">🌌 Scanning the sky for your family's stars…</div>
+      <div id="fm-results" style="display:none">
+        <div id="fm-sky-wrap"><canvas id="fm-sky-canvas"></canvas></div>
+        <div class="fm-star-cards" id="fm-star-cards"></div>
+        <div class="fm-action-row">
+          <button class="fm-action-btn fm-3d-btn" onclick="showFamilyIn3D()">✦ Show in 3D</button>
+          <button class="fm-action-btn fm-cert-btn" onclick="downloadFamilyCertificate()">📜 Certificate</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: REVERSE LOOKUP ── -->
+    <div id="fm-tab-lookup-content" style="display:none">
+      <p class="family-sub">Type a star name or enter a distance in light-years — we'll tell you what year it's watching right now, what era that is, and what events it saw light leave Earth.</p>
+      <div class="rl-input-row">
+        <input class="rl-input" id="rl-query" placeholder="e.g. Vega, Sirius, Betelgeuse … or 25 ly" list="rl-datalist" autocomplete="off"/>
+        <datalist id="rl-datalist"></datalist>
+        <button class="rl-btn" onclick="runReverseLookup()">Look Up</button>
+      </div>
+      <div id="rl-result" style="display:none"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SVG connector lines (drawn by JS) -->
+<svg id="connectors" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:395"></svg>
+
+<!-- HUD top-left -->
+<div id="hud">
+  <div class="hud-logo">✦ SIRIUS</div>
+  <div class="hud-event" id="hud-event">The Sky Is a Time Machine</div>
+  <div class="hud-stars" id="hud-stars"></div>
+</div>
+
+<!-- Decay counter top-right -->
+<div id="decay-hud">
+  <div class="dh-label">Light from this moment has traveled</div>
+  <div class="dh-ticker" id="dh-ticker">—</div>
+  <div class="dh-sub">and will never stop</div>
+</div>
+
+
+<!-- Era legend — populated by buildEraLegend() -->
+<div class="era-legend" id="era-legend">
+  <div class="era-legend-title">Stars coloured by the era they are currently watching on Earth</div>
+</div>
+
+<!-- Cultural fragility bar (above dock) -->
+<div class="fragility-bar" id="fragility-bar">
+  <div class="fb-label">⚠ What we stand to lose</div>
+  <div class="fb-stat" id="fragility-stat">—</div>
+</div>
+
+<!-- CENTER UI — search + category pills -->
+<div id="center-ui">
+  <div class="logo-mark">SIRIUS</div>
+  <div class="logo-sub">Every star is a window into a different moment in history</div>
+  <div id="search-ring">
+    <input id="search-input" type="text" placeholder="Search a historical event or enter a year…" autocomplete="off" spellcheck="false"/>
+    <button id="search-go">✦</button>
+    <div id="autocomplete-float"></div>
+  </div>
+  <div id="cat-pills">
+    <span class="cat-pill active" data-cat="all">All</span>
+    <span class="cat-pill cat-cosmic" data-cat="cosmic">🌌 Cosmic</span>
+    <span class="cat-pill cat-prehistoric" data-cat="prehistoric">🦕 Prehistoric</span>
+    <span class="cat-pill cat-ancient" data-cat="ancient">🏛 Ancient</span>
+    <span class="cat-pill cat-medieval" data-cat="medieval">⚔️ Medieval</span>
+    <span class="cat-pill cat-modern" data-cat="modern">🔭 Modern</span>
+    <span class="cat-pill cat-indigenous" data-cat="indigenous">🌏 Indigenous</span>
+    <span class="cat-pill cat-culture" data-cat="culture">🎨 Culture</span>
+    <span class="cat-pill cat-civil" data-cat="civil">✊ Justice</span>
+  </div>
+  <div id="search-hint">Move mouse to centre · hover a star to inspect · click to open its story</div>
+</div>
+
+<!-- BOTTOM DOCK -->
+<div id="dock-zone"></div>
+<div id="dock">
+  <div class="dock-item" id="dock-search" onclick="showCenterUI(true)" title="Search">
+    <div class="di-icon">🔭</div>
+    <div class="di-label">Search</div>
+  </div>
+  <div class="dock-item" id="dock-refocus" onclick="refocusScene()" title="Refocus">
+    <div class="di-icon">◎</div>
+    <div class="di-label">Refocus</div>
+  </div>
+  <div class="dock-item" id="dock-archive" onclick="openPanel('archive')" title="Family Archive">
+    <div class="di-icon">✦</div>
+    <div class="di-label">Archive</div>
+  </div>
+  <div class="dock-item gold" id="dock-cert" onclick="openCertFromDock()" title="Certificate">
+    <div class="di-icon">📜</div>
+    <div class="di-label">Cert</div>
+  </div>
+  <div class="dock-sep"></div>
+  <div class="dock-item" id="dock-era" onclick="toggleEraMode()" title="Era Mode">
+    <div class="di-icon">🏛</div>
+    <div class="di-label">Era Mode</div>
+  </div>
+  <div class="dock-item" id="dock-moment" onclick="openModal('custom')" title="Add Moment">
+    <div class="di-icon">＋</div>
+    <div class="di-label">Add Moment</div>
+  </div>
+  <div class="dock-item" id="dock-tonight" onclick="openFindItTonight()" title="Find It Tonight">
+    <div class="di-icon">🔭</div>
+    <div class="di-label">Tonight</div>
+  </div>
+  <div class="dock-item" id="dock-letters" onclick="openStarLetters()" title="Star Letters">
+    <div class="di-icon">✉️</div>
+    <div class="di-label">Letters</div>
+  </div>
+  <div class="dock-item" id="dock-family" onclick="openFamilyConstellation()" title="Family Constellation">
+    <div class="di-icon">🌌</div>
+    <div class="di-label">Family</div>
+  </div>
+  <div class="dock-sep"></div>
+  <div class="dock-item" id="dock-pdf" onclick="exportArchivePDF()" title="Export PDF">
+    <div class="di-icon">📄</div>
+    <div class="di-label">Export</div>
+  </div>
+  <div class="dock-item" id="dock-random" onclick="pickRandom()" title="Random Event">
+    <div class="di-icon">🎲</div>
+    <div class="di-label">Random</div>
+  </div>
+</div>
+
+<!-- ══ MODALS ══ -->
+
+<!-- Custom event -->
+<div class="modal-overlay" id="modal-custom">
+  <div class="modal-box" style="max-width:440px">
+    <button class="modal-close" onclick="closeModal('custom')">✕</button>
+    <div class="modal-title">Preserve Your Moment</div>
+    <div class="modal-sub">Enter any date — a birthday, a wedding, a loss. We'll find the star that carries it.</div>
+    <div class="ce-form">
+      <div><span class="ce-label">Event name</span><input class="ce-input" id="ce-name" placeholder="e.g. The day I was born"/></div>
+      <div>
+        <span class="ce-label">Date (day / month / year)</span>
+        <div class="date-inputs" style="margin-top:6px">
+          <input id="day-input" class="date-field" type="number" placeholder="DD" min="1" max="31" style="width:56px"/>
+          <span class="date-sep">/</span>
+          <select id="month-select" class="date-field" style="width:110px">
+            <option value="">Month</option>
+            <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+            <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+            <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+            <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+          </select>
+          <span class="date-sep">/</span>
+          <input id="year-num-input" class="date-field" type="number" placeholder="YYYY" style="width:80px"/>
+          <button class="era-toggle" id="era-toggle" type="button">CE</button>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;padding:13px" onclick="addCustomEvent()">Find My Star ✦</button>
+    </div>
+  </div>
+</div>
+
+<!-- Certificate modal -->
+<div class="modal-overlay" id="modal-cert">
+  <div class="modal-box" style="max-width:600px">
+    <button class="modal-close" onclick="closeModal('cert')">✕</button>
+    <div class="modal-title">Sirius Certificate</div>
+    <div class="cert-style-picker">
+      <button class="csp-btn active" id="csp-standard" onclick="setCertStyle('standard',this)">✦ Standard<br><span style="font-size:.6rem;opacity:.7">This moment in starlight</span></button>
+      <button class="csp-btn" id="csp-passdown" onclick="setCertStyle('passdown',this)">🌱 Pass It Down<br><span style="font-size:.6rem;opacity:.7">A letter to future generations</span></button>
+    </div>
+    <canvas id="cert-canvas" class="gen-preview" width="600" height="480"></canvas>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('cert')">Close</button>
+      <button class="btn btn-primary" onclick="downloadCert()">⬇ Download PNG</button>
+    </div>
+  </div>
+</div>
+
+<!-- Share modal -->
+<div class="modal-overlay" id="modal-share">
+  <div class="modal-box" style="max-width:480px">
+    <button class="modal-close" onclick="closeModal('share')">✕</button>
+    <div class="modal-title">Share This Moment</div>
+    <canvas id="share-canvas" class="gen-preview" width="480" height="480"></canvas>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('share')">Close</button>
+      <button class="btn btn-primary" onclick="downloadShare()">⬇ Download</button>
+    </div>
+  </div>
+</div>
+
+<!-- Story card modal -->
+<div class="modal-overlay" id="modal-story">
+  <div class="modal-box" style="max-width:540px;padding:0;background:transparent;border:none">
+    <div class="sc-card">
+      <button class="sc-close" onclick="closeModal('story')">✕</button>
+      <canvas id="sc-stars-canvas" width="540" height="400" style="position:absolute;inset:0;width:100%;height:100%;opacity:.4;pointer-events:none"></canvas>
+      <div style="position:relative;z-index:1">
+        <div class="sc-top-label">A Story Carried by Starlight</div>
+        <div class="sc-headline" id="sc-headline">—</div>
+        <div class="sc-sub" id="sc-sub">—</div>
+        <div class="sc-divider"></div>
+        <p class="sc-narrative" id="sc-narrative">—</p>
+        <div class="sc-witness-row">
+          <div class="sc-star-dot" id="sc-star-dot">✦</div>
+          <div class="sc-witness-text" id="sc-witness-text">—</div>
+        </div>
+        <div class="sc-divider"></div>
+        <div class="sc-eternal" id="sc-eternal">—</div>
+        <div class="sc-actions">
+          <button class="btn btn-ghost" onclick="saveStoryCard()">⬇ Save to Archive</button>
+          <button class="btn btn-ghost" onclick="closeModal('story')">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Archive add modal -->
+<div class="modal-overlay" id="modal-archive-add">
+  <div class="modal-box" style="max-width:440px">
+    <button class="modal-close" onclick="closeModal('archive-add')">✕</button>
+    <div class="modal-title">Preserve a Moment</div>
+    <div class="modal-sub">Name a family moment — the light from it is already traveling through space.</div>
+    <div class="ce-form">
+      <div><span class="ce-label">What moment is this?</span><input class="ce-input" id="aa-name" placeholder="e.g. My grandmother's birthday"/></div>
+      <div>
+        <span class="ce-label">Icon</span>
+        <div class="aa-emoji-picker" id="aa-emoji-picker">
+          <button class="aa-emoji-btn selected" data-emoji="⭐">⭐</button>
+          <button class="aa-emoji-btn" data-emoji="👶">👶</button>
+          <button class="aa-emoji-btn" data-emoji="💍">💍</button>
+          <button class="aa-emoji-btn" data-emoji="🎓">🎓</button>
+          <button class="aa-emoji-btn" data-emoji="🏡">🏡</button>
+          <button class="aa-emoji-btn" data-emoji="🌍">🌍</button>
+          <button class="aa-emoji-btn" data-emoji="✊">✊</button>
+          <button class="aa-emoji-btn" data-emoji="🕊">🕊</button>
+          <button class="aa-emoji-btn" data-emoji="🎵">🎵</button>
+          <button class="aa-emoji-btn" data-emoji="🌱">🌱</button>
+        </div>
+      </div>
+      <div>
+        <span class="ce-label">Date</span>
+        <div class="date-inputs" style="margin-top:6px">
+          <input id="aa-day" class="date-field" type="number" placeholder="DD" min="1" max="31" style="width:56px"/>
+          <span class="date-sep">/</span>
+          <select id="aa-month" class="date-field" style="width:110px">
+            <option value="">Month</option>
+            <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+            <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+            <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+            <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+          </select>
+          <span class="date-sep">/</span>
+          <input id="aa-year" class="date-field" type="number" placeholder="YYYY" style="width:80px"/>
+        </div>
+      </div>
+      <div><span class="ce-label">Note (optional)</span><textarea class="ce-input" id="aa-note" rows="2" placeholder="A brief note…" style="resize:vertical;min-height:52px"></textarea></div>
+      <button class="btn btn-primary" style="width:100%;padding:13px" onclick="saveArchiveMoment()">Preserve This Moment ✦</button>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL OVERLAY (archive, etc.) -->
+<div id="panel-overlay">
+  <div id="panel-header">
+    <div id="panel-title">Archive</div>
+    <button id="panel-close" onclick="closePanel()">✕ Close</button>
+  </div>
+  <div id="panel-content"></div>
+</div>
+
+<script>
+/* ════════ CONSTANTS ════════ */
+const CURRENT_YEAR=2026;
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS_FULL=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+/* ════════ STATE ════════ */
+const S={
+  events:[],selectedCat:'all',
+  currentLY:null,currentEventName:'',currentStars:[],currentYear:null,
+  currentCategory:'',
+  userLat:null,userLon:null,userCity:null,
+  eraMode:false,
+  centerVisible:false,
+  dockVisible:false,
+  activeStar:null,
+  floatCards:{}, // id → {star, pinned, el}
+  certStar:null,certEvent:null,certYear:null,
+  certStyle:'standard',
+};
+
+/* ════════ CUSTOM CURSOR ════════ */
+(function(){
+  const ring=document.getElementById('cursor-ring');
+  const dot=document.getElementById('cursor-dot');
+  let mx=window.innerWidth/2,my=window.innerHeight/2;
+  let rx=mx,ry=my;
+  function update(){
+    rx+=(mx-rx)*.18;ry+=(my-ry)*.18;
+    ring.style.left=rx+'px';ring.style.top=ry+'px';
+    dot.style.left=mx+'px';dot.style.top=my+'px';
+    requestAnimationFrame(update);
+  }
+  document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+  document.addEventListener('mousedown',()=>ring.classList.add('clicking'));
+  document.addEventListener('mouseup',()=>ring.classList.remove('clicking'));
+  const hov='button,a,.dock-item,.ac-item,.cat-pill,.fc-btn,.csp-btn,.aa-emoji-btn,.archive-card,.btn';
+  document.addEventListener('mouseover',e=>{if(e.target.closest(hov))ring.classList.add('hovering');});
+  document.addEventListener('mouseout',e=>{if(e.target.closest(hov))ring.classList.remove('hovering');});
+  update();
+})();
+
+/* ════════ 3D SPACE RENDERER ════════ */
+let _scene,_camera,_renderer,_world,_backgroundStars,_resultStars,_focusLines,_neighborStars,_animFrame;
+let _raycaster,_mouse3d,_glowTexWhite;
+let _starData3d=[];
+let _pulseAnimFrame=null;
+let _isDragging=false,_isPanning=false,_dragX=0,_dragY=0;
+const _defaultPhi=1.35,_defaultTheta=0.2,_defaultRadius=280;
+let _phi=_defaultPhi,_theta=_defaultTheta,_targetPhi=_defaultPhi,_targetTheta=_defaultTheta;
+let _cameraRadius=_defaultRadius,_targetRadius=_defaultRadius;
+let _autoRotSpeed=0.00035;
+let _debugFrameCounter=0;
+let _sceneBootStarted=false;
+let _minCameraRadius=140,_maxCameraRadius=1400;
+let _cameraTarget=null,_targetCameraTarget=null;
+let _hasExplored=false,_centerCompact=false;
+
+function setDebugState(status, fields={}){
+  const root=document.getElementById('three-debug');
+  if(!root)return;
+  root.classList.remove('ok','warn','err');
+  root.classList.add(status||'warn');
+  const ids={
+    script:'dbg-script',
+    renderer:'dbg-renderer',
+    scene:'dbg-scene',
+    stars:'dbg-stars',
+    frame:'dbg-frame',
+    status:'dbg-status',
+  };
+  Object.entries(fields).forEach(([key,val])=>{
+    const el=document.getElementById(ids[key]);
+    if(el)el.textContent=String(val);
+  });
+}
+
+function setCenterCompact(compact){
+  _centerCompact=!!compact;
+  const el=document.getElementById('center-ui');
+  if(!el)return;
+  el.classList.toggle('compact',_centerCompact);
+}
+
+function markSceneExplored(){
+  _hasExplored=true;
+  if(S.centerVisible)setCenterCompact(true);
+}
+
+setTimeout(()=>{
+  setDebugState('warn',{status:'js loaded'});
+},0);
+
+function updateCamera(){
+  _theta+=(_targetTheta-_theta)*0.08;
+  _phi+=(_targetPhi-_phi)*0.08;
+  _cameraRadius+=(_targetRadius-_cameraRadius)*0.08;
+  if(_cameraTarget&&_targetCameraTarget)_cameraTarget.lerp(_targetCameraTarget,0.08);
+  const sinPhi=Math.sin(_phi);
+  _camera.position.set(
+    _cameraRadius*sinPhi*Math.sin(_theta),
+    _cameraRadius*Math.cos(_phi),
+    _cameraRadius*sinPhi*Math.cos(_theta)
+  );
+  if(_cameraTarget)_camera.position.add(_cameraTarget);
+  if(_cameraTarget)_camera.lookAt(_cameraTarget.x,_cameraTarget.y,_cameraTarget.z);
+  else _camera.lookAt(0,0,0);
+}
+
+function focusWorldPosition(x,y,z){
+  const len=Math.hypot(x,y,z)||1;
+  _targetPhi=Math.acos(Math.max(-0.98,Math.min(0.98,y/len)));
+  _targetTheta=Math.atan2(x/len,z/len);
+  _targetRadius=220;
+  if(_targetCameraTarget)_targetCameraTarget.set(x*0.35,y*0.35,z*0.35);
+}
+
+function refocusScene(){
+  _targetPhi=_defaultPhi;
+  _targetTheta=_defaultTheta;
+  _targetRadius=_defaultRadius;
+  if(_targetCameraTarget)_targetCameraTarget.set(0,0,0);
+  setCenterCompact(true);
+  showCenterUI();
+  setDebugState('ok',{status:'refocused'});
+}
+
+function makeGlowTex(r,g,b){
+  const c=document.createElement('canvas');c.width=64;c.height=64;
+  const ctx=c.getContext('2d');
+  const g2=ctx.createRadialGradient(32,32,0,32,32,32);
+  g2.addColorStop(0,  `rgba(${r},${g},${b},1)`);
+  g2.addColorStop(.3, `rgba(${r},${g},${b},.7)`);
+  g2.addColorStop(.7, `rgba(${r},${g},${b},.15)`);
+  g2.addColorStop(1,  'rgba(0,0,0,0)');
+  ctx.fillStyle=g2;ctx.fillRect(0,0,64,64);
+  return new THREE.CanvasTexture(c);
+}
+
+function revealSpaceUI(){
+  document.getElementById('center-ui').classList.add('visible');
+}
+
+function clearResultLayers(){
+  if(_resultStars){
+    _world.remove(_resultStars);
+    if(_resultStars.geometry&&_resultStars.geometry.dispose)_resultStars.geometry.dispose();
+    if(_resultStars.material&&_resultStars.material.dispose)_resultStars.material.dispose();
+    _resultStars=null;
+  }
+  if(_focusLines){
+    _world.remove(_focusLines);
+    if(_focusLines.geometry&&_focusLines.geometry.dispose)_focusLines.geometry.dispose();
+    if(_focusLines.material&&_focusLines.material.dispose)_focusLines.material.dispose();
+    _focusLines=null;
+  }
+  if(_neighborStars){
+    _world.remove(_neighborStars);
+    if(_neighborStars.geometry&&_neighborStars.geometry.dispose)_neighborStars.geometry.dispose();
+    if(_neighborStars.material&&_neighborStars.material.dispose)_neighborStars.material.dispose();
+    _neighborStars=null;
+  }
+  if(_pulseAnimFrame){
+    cancelAnimationFrame(_pulseAnimFrame);
+    _pulseAnimFrame=null;
+  }
+  _starData3d=[];
+}
+
+function buildBackgroundStars(){
+  const group=new THREE.Group();
+
+  /* ── Layer A: 10 000 crisp pixel stars — full sphere, fixed pixel size ── */
+  const pixN=10000;
+  const pixPos=new Float32Array(pixN*3),pixCol=new Float32Array(pixN*3);
+  for(let i=0;i<pixN;i++){
+    const th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1);
+    const r=400+Math.random()*3000;
+    pixPos[i*3  ]=r*Math.sin(ph)*Math.cos(th);
+    pixPos[i*3+1]=r*Math.sin(ph)*Math.sin(th);
+    pixPos[i*3+2]=r*Math.cos(ph);
+    const t=Math.random();
+    pixCol[i*3  ]=0.62+t*0.38; pixCol[i*3+1]=0.70+t*0.24; pixCol[i*3+2]=t>0.5?0.72:1;
+  }
+  const pixGeo=new THREE.BufferGeometry();
+  pixGeo.setAttribute('position',new THREE.BufferAttribute(pixPos,3));
+  pixGeo.setAttribute('color',  new THREE.BufferAttribute(pixCol,3));
+  group.add(new THREE.Points(pixGeo,new THREE.PointsMaterial({
+    size:1.8,vertexColors:true,sizeAttenuation:false,
+    transparent:true,opacity:0.88,depthWrite:false,blending:THREE.AdditiveBlending,
+  })));
+
+  /* ── Layer B: 2 000 glow stars — kept well outside the camera orbit zone ── */
+  const glowN=2000;
+  const glowPos=new Float32Array(glowN*3),glowCol=new Float32Array(glowN*3);
+  for(let i=0;i<glowN;i++){
+    const th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1);
+    const r=400+Math.random()*600; // 400–1000 units, well beyond camera radius
+    glowPos[i*3  ]=r*Math.sin(ph)*Math.cos(th);
+    glowPos[i*3+1]=r*Math.sin(ph)*Math.sin(th);
+    glowPos[i*3+2]=r*Math.cos(ph);
+    const t=Math.random();
+    glowCol[i*3]=0.80+t*0.20; glowCol[i*3+1]=0.86+t*0.12; glowCol[i*3+2]=1;
+  }
+  const glowGeo=new THREE.BufferGeometry();
+  glowGeo.setAttribute('position',new THREE.BufferAttribute(glowPos,3));
+  glowGeo.setAttribute('color',  new THREE.BufferAttribute(glowCol,3));
+  group.add(new THREE.Points(glowGeo,new THREE.PointsMaterial({
+    size:6,map:_glowTexWhite,vertexColors:true,sizeAttenuation:true,
+    transparent:true,opacity:0.75,depthWrite:false,alphaTest:0.004,
+    blending:THREE.AdditiveBlending,
+  })));
+
+  /* ── Layer C: Milky Way band — 6 000 stars concentrated along galactic plane ── */
+  const mwN=6000;
+  const mwPos=new Float32Array(mwN*3),mwCol=new Float32Array(mwN*3);
+  // Galactic plane tilted ~60° from equatorial — simulate with gaussian scatter around a great circle
+  const galTilt=1.08; // radians — approximate galactic inclination
+  for(let i=0;i<mwN;i++){
+    const lon=Math.random()*Math.PI*2;            // galactic longitude
+    const lat=(Math.random()-0.5)*0.32;           // tight gaussian scatter around plane
+    // Rotate from galactic to scene coords
+    const x0=Math.cos(lat)*Math.cos(lon);
+    const y0=Math.sin(lat);
+    const z0=Math.cos(lat)*Math.sin(lon);
+    const y1=y0*Math.cos(galTilt)-z0*Math.sin(galTilt);
+    const z1=y0*Math.sin(galTilt)+z0*Math.cos(galTilt);
+    const r=600+Math.random()*1800;
+    mwPos[i*3  ]=x0*r; mwPos[i*3+1]=y1*r; mwPos[i*3+2]=z1*r;
+    // Milky Way colour — warm dusty white to blue-white
+    const dust=Math.random();
+    mwCol[i*3]=0.88+dust*0.12; mwCol[i*3+1]=0.82+dust*0.14; mwCol[i*3+2]=0.68+dust*0.30;
+  }
+  const mwGeo=new THREE.BufferGeometry();
+  mwGeo.setAttribute('position',new THREE.BufferAttribute(mwPos,3));
+  mwGeo.setAttribute('color',  new THREE.BufferAttribute(mwCol,3));
+  group.add(new THREE.Points(mwGeo,new THREE.PointsMaterial({
+    size:1.4,vertexColors:true,sizeAttenuation:false,
+    transparent:true,opacity:0.55,depthWrite:false,blending:THREE.AdditiveBlending,
+  })));
+
+  /* ── Layer D: 50 vivid hero stars ── */
+  const heroN=50;
+  const heroPos=new Float32Array(heroN*3),heroCol=new Float32Array(heroN*3);
+  const palettes=[[1,.88,.72],[.72,.84,1],[1,.96,.9],[1,.78,.58],[.9,1,.8],[.6,.9,1]];
+  for(let i=0;i<heroN;i++){
+    const th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1);
+    const r=350+Math.random()*400; // keep beyond camera orbit zone
+    heroPos[i*3  ]=r*Math.sin(ph)*Math.cos(th);
+    heroPos[i*3+1]=r*Math.sin(ph)*Math.sin(th);
+    heroPos[i*3+2]=r*Math.cos(ph);
+    const p=palettes[i%palettes.length];
+    heroCol[i*3]=p[0]; heroCol[i*3+1]=p[1]; heroCol[i*3+2]=p[2];
+  }
+  const heroGeo=new THREE.BufferGeometry();
+  heroGeo.setAttribute('position',new THREE.BufferAttribute(heroPos,3));
+  heroGeo.setAttribute('color',  new THREE.BufferAttribute(heroCol,3));
+  group.add(new THREE.Points(heroGeo,new THREE.PointsMaterial({
+    size:10,map:_glowTexWhite,vertexColors:true,sizeAttenuation:true,
+    transparent:true,opacity:0.94,depthWrite:false,alphaTest:0.004,
+    blending:THREE.AdditiveBlending,
+  })));
+
+  group.userData.starCount=pixN+glowN+mwN+heroN;
+  return group;
+}
+
+/* ── Solar System origin marker ── */
+let _solarMarker=null;
+let _solarLabelEl=null;
+
+function buildSolarSystemMarker(){
+  if(!_scene||!_world)return;
+  const group=new THREE.Group();
+
+  // Sun — bright warm white core
+  const sunGeo=new THREE.BufferGeometry();
+  sunGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array([0,0,0]),3));
+  const sunMat=new THREE.PointsMaterial({
+    size:22,sizeAttenuation:false,color:new THREE.Color(1,0.96,0.78),map:_glowTexWhite,
+    transparent:true,opacity:1,depthWrite:false,blending:THREE.AdditiveBlending
+  });
+  group.add(new THREE.Points(sunGeo,sunMat));
+
+  // Sun glow halo
+  const haloGeo=new THREE.BufferGeometry();
+  haloGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array([0,0,0]),3));
+  const haloMat=new THREE.PointsMaterial({
+    size:52,sizeAttenuation:false,color:new THREE.Color(1,0.88,0.5),map:_glowTexWhite,
+    transparent:true,opacity:0.55,depthWrite:false,blending:THREE.AdditiveBlending
+  });
+  group.add(new THREE.Points(haloGeo,haloMat));
+
+  // Outer diffuse glow (world-space, large)
+  const outerGeo=new THREE.BufferGeometry();
+  outerGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array([0,0,0]),3));
+  const outerMat=new THREE.PointsMaterial({
+    size:28,sizeAttenuation:true,color:new THREE.Color(1,0.82,0.3),map:_glowTexWhite,
+    transparent:true,opacity:0.28,depthWrite:false,blending:THREE.AdditiveBlending
+  });
+  group.add(new THREE.Points(outerGeo,outerMat));
+
+  // Faint orbital ring disc — flat circle of dots to hint at the solar system plane
+  const ringN=120;
+  const ringPos=new Float32Array(ringN*3);
+  const ringCol=new Float32Array(ringN*3);
+  for(let i=0;i<ringN;i++){
+    const angle=(i/ringN)*Math.PI*2;
+    const r=8+Math.random()*6;          // radius 8–14 world units (tiny)
+    const jitter=Math.random()*1.5-0.75;
+    ringPos[i*3  ]=Math.cos(angle)*r;
+    ringPos[i*3+1]=jitter;
+    ringPos[i*3+2]=Math.sin(angle)*r;
+    const b=0.3+Math.random()*0.3;
+    ringCol[i*3]=b; ringCol[i*3+1]=b*0.9; ringCol[i*3+2]=b*0.6;
+  }
+  const ringGeo=new THREE.BufferGeometry();
+  ringGeo.setAttribute('position',new THREE.BufferAttribute(ringPos,3));
+  ringGeo.setAttribute('color',new THREE.BufferAttribute(ringCol,3));
+  group.add(new THREE.Points(ringGeo,new THREE.PointsMaterial({
+    size:2.2,vertexColors:true,sizeAttenuation:true,
+    transparent:true,opacity:0.55,depthWrite:false,blending:THREE.AdditiveBlending
+  })));
+
+  _world.add(group);
+  _solarMarker=group;
+
+  // CSS label — "Our Solar System" — shown when zoomed out far
+  const label=document.createElement('div');
+  label.id='solar-label';
+  label.textContent='Our Solar System';
+  label.style.cssText=[
+    'position:fixed;pointer-events:none;z-index:200',
+    'font-family:Orbitron,sans-serif;font-size:.55rem;letter-spacing:.18em;text-transform:uppercase',
+    'color:rgba(255,240,180,.0);text-align:center',
+    'transition:color .4s',
+    'text-shadow:0 0 12px rgba(255,200,80,.5)',
+    'white-space:nowrap',
+  ].join(';');
+  document.body.appendChild(label);
+  _solarLabelEl=label;
+}
+
+function updateSolarLabel(){
+  if(!_solarLabelEl||!_camera||!_renderer)return;
+  // Project origin to screen space
+  const origin=new THREE.Vector3(0,0,0);
+  if(_cameraTarget)origin.copy(_cameraTarget).multiplyScalar(0); // always world origin
+  const projected=origin.clone().project(_camera);
+  const W=window.innerWidth,H=window.innerHeight;
+  const sx=(projected.x*0.5+0.5)*W;
+  const sy=(-(projected.y)*0.5+0.5)*H;
+
+  // Only show when camera is far enough away (radius > 380)
+  const showFrac=Math.max(0,Math.min(1,(_cameraRadius-380)/300));
+  _solarLabelEl.style.color=`rgba(255,235,160,${showFrac*0.75})`;
+  _solarLabelEl.style.left=(sx-60)+'px';
+  _solarLabelEl.style.top=(sy+22)+'px';
+
+  // Pulse the sun glow slightly
+  if(_solarMarker){
+    const t=Date.now()*0.0008;
+    const pulse=0.85+Math.sin(t)*0.15;
+    _solarMarker.children[1].material.opacity=0.55*pulse; // halo
+  }
+}
+
+function loadNeighborCluster(starDatum){
+  if(!_world||!starDatum)return;
+  if(_neighborStars){
+    _world.remove(_neighborStars);
+    if(_neighborStars.geometry&&_neighborStars.geometry.dispose)_neighborStars.geometry.dispose();
+    if(_neighborStars.material&&_neighborStars.material.dispose)_neighborStars.material.dispose();
+    _neighborStars=null;
+  }
+
+  const count=180;
+  const pos=new Float32Array(count*3);
+  const col=new Float32Array(count*3);
+  const baseColor=_eraMode ? eraColor(starDatum.star.dist_ly) : spectralRGB(starDatum.star.spectral_type);
+
+  for(let i=0;i<count;i++){
+    const angle=Math.random()*Math.PI*2;
+    const spread=(Math.random()*.6+.12)*(Math.random()>0.7?28:11);
+    const lift=(Math.random()-.5)*22;
+    const dx=Math.cos(angle)*spread;
+    const dz=Math.sin(angle)*spread;
+    const dy=lift;
+    pos[i*3]=starDatum.x+dx;
+    pos[i*3+1]=starDatum.y+dy;
+    pos[i*3+2]=starDatum.z+dz;
+    const variance=.82+Math.random()*.28;
+    col[i*3]=Math.min(1,baseColor[0]*variance);
+    col[i*3+1]=Math.min(1,baseColor[1]*variance);
+    col[i*3+2]=Math.min(1,baseColor[2]*variance);
+  }
+
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+  _neighborStars=new THREE.Points(geo,new THREE.PointsMaterial({
+    size:5.8,map:_glowTexWhite,vertexColors:true,sizeAttenuation:true,
+    transparent:true,opacity:.72,depthWrite:false,blending:THREE.AdditiveBlending
+  }));
+  _world.add(_neighborStars);
+}
+
+function bindSceneEvents(canvas){
+  canvas.addEventListener('mousedown',e=>{
+    if(e.button===0){
+      _isDragging=true;
+      canvas.style.cursor='grabbing';
+    }else if(e.button===1){
+      _isPanning=true;
+      canvas.style.cursor='move';
+      e.preventDefault();
+    }else{
+      return;
+    }
+    _dragX=e.clientX;
+    _dragY=e.clientY;
+    markSceneExplored();
+  });
+
+  window.addEventListener('mousemove',e=>{
+    if(_isDragging){
+      const dx=e.clientX-_dragX;
+      const dy=e.clientY-_dragY;
+      _targetTheta-=dx*0.005;
+      _targetPhi=Math.max(0.25,Math.min(Math.PI-0.25,_targetPhi-dy*0.004));
+      _dragX=e.clientX;
+      _dragY=e.clientY;
+      return;
+    }
+    if(_isPanning&&_targetCameraTarget&&_camera){
+      const dx=e.clientX-_dragX;
+      const dy=e.clientY-_dragY;
+      const panScale=Math.max(0.08,_targetRadius*0.0018);
+      const right=new THREE.Vector3(1,0,0).applyQuaternion(_camera.quaternion);
+      const up=new THREE.Vector3(0,1,0).applyQuaternion(_camera.quaternion);
+      _targetCameraTarget.addScaledVector(right,-dx*panScale);
+      _targetCameraTarget.addScaledVector(up,dy*panScale);
+      _dragX=e.clientX;
+      _dragY=e.clientY;
+      markSceneExplored();
+      return;
+    }
+
+    _mouse3d.x=(e.clientX/window.innerWidth)*2-1;
+    _mouse3d.y=-(e.clientY/window.innerHeight)*2+1;
+    if(!_resultStars)return;
+    _raycaster.params.Points.threshold=Math.max(6,_cameraRadius*0.065);
+    _resultStars.updateMatrixWorld(true);
+    _raycaster.setFromCamera(_mouse3d,_camera);
+    const hits=_raycaster.intersectObject(_resultStars,false);
+    if(hits.length){
+      canvas.style.cursor='none';
+      document.getElementById('cursor-ring').classList.add('hovering');
+      const hoverDatum=_starData3d[hits[0].index];
+      showStarHoverHint(hoverDatum?hoverDatum.star:null);
+    }else{
+      canvas.style.cursor='';
+      document.getElementById('cursor-ring').classList.remove('hovering');
+      hideStarHoverHint();
+    }
+  });
+
+  window.addEventListener('mouseup',()=>{
+    _isDragging=false;
+    _isPanning=false;
+    canvas.style.cursor='';
+  });
+
+  canvas.addEventListener('click',e=>{
+    if(e.target.closest('.float-card'))return;
+    // Don't fire if this was the end of a drag (moved more than 4px)
+    if(Math.hypot(e.clientX-_dragX,e.clientY-_dragY)>4&&_dragX!==0)return;
+
+    _mouse3d.x=(e.clientX/window.innerWidth)*2-1;
+    _mouse3d.y=-(e.clientY/window.innerHeight)*2+1;
+
+    if(_resultStars&&_starData3d.length){
+      // Scale threshold with camera distance so it always feels right
+      _raycaster.params.Points.threshold=Math.max(6,_cameraRadius*0.065);
+      // Force matrix update so raycaster sees current positions
+      _resultStars.updateMatrixWorld(true);
+      _raycaster.setFromCamera(_mouse3d,_camera);
+      const hits=_raycaster.intersectObject(_resultStars,false);
+      if(hits.length){
+        const idx=hits[0].index;
+        const sd=idx<_starData3d.length ? _starData3d[idx] : null;
+        if(sd&&sd.star){
+          loadNeighborCluster(sd);
+          spawnFloatCard(sd.star,e.clientX,e.clientY);
+          return;
+        }
+      }
+      // Missed a star — show search bar so user can try again
+    }
+    showCenterUI();
+  });
+
+  canvas.addEventListener('wheel',e=>{
+    e.preventDefault();
+    const next=_targetRadius + (e.deltaY>0 ? 24 : -24);
+    _targetRadius=Math.max(_minCameraRadius,Math.min(_maxCameraRadius,next));
+    markSceneExplored();
+    setDebugState('ok',{status:`zoom ${Math.round(_targetRadius)}`});
+  },{passive:false});
+  canvas.addEventListener('auxclick',e=>{
+    if(e.button===1)e.preventDefault();
+  });
+
+  window.addEventListener('resize',()=>{
+    _camera.aspect=window.innerWidth/window.innerHeight;
+    _camera.updateProjectionMatrix();
+    _renderer.setSize(window.innerWidth,window.innerHeight);
+  });
+}
+
+function animateScene(){
+  _animFrame=requestAnimationFrame(animateScene);
+  if(!_isDragging)_targetTheta+=_autoRotSpeed;
+  if(_backgroundStars){
+    _backgroundStars.rotation.y+=0.00008;
+    _backgroundStars.rotation.x=Math.sin(_debugFrameCounter*0.002)*0.02;
+  }
+  if(_neighborStars){
+    _neighborStars.rotation.y+=0.0018;
+  }
+  updateCamera();
+  _renderer.render(_scene,_camera);
+  updateSolarLabel();
+  _debugFrameCounter++;
+  if(_debugFrameCounter%20===0){
+    setDebugState('ok',{frame:`tick ${_debugFrameCounter}`,status:'rendering'});
+  }
+}
+
+function initScene(){
+  const canvas=document.getElementById('space-canvas');
+  if(!canvas)return;
+  _sceneBootStarted=true;
+  setDebugState('warn',{script:window.THREE?'loaded':'missing',renderer:'booting',scene:'booting',stars:'0',frame:'idle',status:'starting'});
+  if(!window.THREE||!window.THREE.WebGLRenderer){
+    console.error('Three.js did not load');
+    canvas.style.background='radial-gradient(circle at 50% 35%,#081120 0%,#030611 55%,#000 100%)';
+    setDebugState('err',{script:'missing',renderer:'failed',scene:'skipped',status:'THREE unavailable'});
+    revealSpaceUI();
+    return;
+  }
+  try{
+    _scene=new THREE.Scene();
+    setDebugState('warn',{script:`r${window.THREE.REVISION||'?'}`,scene:'created'});
+    _world=new THREE.Group();
+    _scene.add(_world);
+    _cameraTarget=new THREE.Vector3(0,0,0);
+    _targetCameraTarget=new THREE.Vector3(0,0,0);
+
+    _camera=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,0.1,12000);
+    _renderer=new THREE.WebGLRenderer({canvas,antialias:false,alpha:false,powerPreference:'high-performance'});
+    _renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));
+    _renderer.setSize(window.innerWidth,window.innerHeight);
+    _renderer.setClearColor(0x020610,1);
+    setDebugState('warn',{renderer:'created'});
+
+    _raycaster=new THREE.Raycaster();
+    _raycaster.params.Points.threshold=8;
+    _mouse3d=new THREE.Vector2();
+    _glowTexWhite=makeGlowTex(255,255,255);
+
+    _scene.add(new THREE.HemisphereLight(0x8bbcff,0x050814,0.5));
+    requestAnimationFrame(()=>{
+      try{
+        _backgroundStars=buildBackgroundStars();
+        _world.add(_backgroundStars);
+        buildSolarSystemMarker();
+        setDebugState('warn',{scene:'built',stars:_backgroundStars.userData.starCount||0,status:'scene ready'});
+      }catch(err){
+        console.error('Background star build failed:',err);
+        setDebugState('err',{scene:'failed',status:(err&&err.message)||'bg build failed'});
+      }
+    });
+
+    bindSceneEvents(canvas);
+    updateCamera();
+    animateScene();
+    revealSpaceUI();
+  }catch(err){
+    console.error('3D init failed:',err);
+    canvas.style.background='radial-gradient(circle at 50% 35%,#081120 0%,#030611 55%,#000 100%)';
+    setDebugState('err',{
+      renderer:_renderer?'created':'failed',
+      scene:_scene?'created':'failed',
+      status:(err&&err.message)||'init failed'
+    });
+    revealSpaceUI();
+  }
+}
+
+window.addEventListener('load',()=>{
+  if(!_sceneBootStarted){
+    setDebugState('err',{status:'initScene not reached'});
+  }
+});
+
+function renderSearchResults(stars,targetLY){
+  if(!_scene||!_renderer||!_world){
+    console.warn('3D scene not ready — skipping renderSearchResults');
+    return;
+  }
+  clearResultLayers();
+  if(!stars||!stars.length)return;
+  markSceneExplored();
+  setCenterCompact(true);
+
+  const positions=new Float32Array(stars.length*3);
+  const colors=new Float32Array(stars.length*3);
+  const linePos=[];
+  let focusX=0,focusY=0,focusZ=0;
+
+  stars.forEach((star,i)=>{
+    const ra=(star.ra||0)*(Math.PI/180);
+    const dec=(star.dec||0)*(Math.PI/180);
+    const diff=Math.abs(star.dist_ly-(targetLY||star.dist_ly));
+    const radius=160+Math.min(85,diff*1.2);
+    const x=radius*Math.cos(dec)*Math.cos(ra);
+    const y=radius*Math.sin(dec);
+    const z=-radius*Math.cos(dec)*Math.sin(ra);
+    positions[i*3]=x;
+    positions[i*3+1]=y;
+    positions[i*3+2]=z;
+    _starData3d.push({star,x,y,z});
+    focusX+=x;focusY+=y;focusZ+=z;
+    linePos.push(0,0,0,x,y,z);
+
+    const spec=_eraMode ? eraColor(star.dist_ly) : spectralRGB(star.spectral_type);
+    const brightness=diff<0.5?1:diff<2?0.8:0.6;
+    colors[i*3]=spec[0]*brightness;
+    colors[i*3+1]=spec[1]*brightness;
+    colors[i*3+2]=spec[2]*brightness;
+  });
+
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(positions,3));
+  geo.setAttribute('color',new THREE.BufferAttribute(colors,3));
+
+  const mat=new THREE.PointsMaterial({
+    size:28,map:_glowTexWhite,vertexColors:true,sizeAttenuation:true,
+    transparent:true,depthWrite:false,alphaTest:.003,blending:THREE.AdditiveBlending
+  });
+  _resultStars=new THREE.Points(geo,mat);
+  _world.add(_resultStars);
+
+  const lineGeo=new THREE.BufferGeometry();
+  lineGeo.setAttribute('position',new THREE.Float32BufferAttribute(linePos,3));
+  _focusLines=new THREE.LineSegments(lineGeo,new THREE.LineBasicMaterial({
+    color:0x4d9fff,transparent:true,opacity:0.09
+  }));
+  _world.add(_focusLines);
+
+  focusWorldPosition(focusX/stars.length,focusY/stars.length,focusZ/stars.length);
+  // If era mode is on, refresh the legend highlight for the new star set
+  if(_eraMode) highlightActiveLegendEras();
+
+  // ── Ripple reveal: stars expand outward from origin ──
+  const posAttr=geo.attributes.position;
+  const targetPositions=positions.slice();
+  const originPositions=new Float32Array(stars.length*3); // all at 0,0,0
+  posAttr.array.set(originPositions);
+  posAttr.needsUpdate=true;
+  let rippleT=0;
+  const ripple=()=>{
+    if(!_resultStars||rippleT>=1){if(_resultStars){posAttr.array.set(targetPositions);posAttr.needsUpdate=true;}return;}
+    rippleT=Math.min(1,rippleT+0.045);
+    const ease=1-Math.pow(1-rippleT,3); // ease-out cubic
+    for(let i=0;i<stars.length*3;i++) posAttr.array[i]=targetPositions[i]*ease;
+    posAttr.needsUpdate=true;
+    requestAnimationFrame(ripple);
+  };
+  requestAnimationFrame(ripple);
+
+  // ── Pulse glow once settled ──
+  let t=0;
+  const pulse=()=>{
+    if(!_resultStars)return;
+    t+=0.018;
+    mat.size=28+Math.sin(t)*4;
+    _pulseAnimFrame=requestAnimationFrame(pulse);
+  };
+  setTimeout(pulse,700);
+
+  // ── Auto-spawn float cards for the top stars once ripple settles ──
+  setTimeout(()=>{
+    if(!_starData3d.length||!_camera)return;
+    // Pick up to 3 stars sorted by closeness to the searched distance
+    const picks=[..._starData3d]
+      .filter(sd=>sd&&sd.star)
+      .sort((a,b)=>Math.abs(a.star.dist_ly-(targetLY||a.star.dist_ly))-Math.abs(b.star.dist_ly-(targetLY||b.star.dist_ly)))
+      .slice(0,Math.min(3,_starData3d.length));
+    picks.forEach((sd,i)=>{
+      setTimeout(()=>{
+        // Project 3D world position → screen coords for the connector anchor
+        const v=new THREE.Vector3(sd.x,sd.y,sd.z);
+        _world.localToWorld(v);
+        v.project(_camera);
+        const sx=Math.max(60,Math.min((v.x+1)/2*window.innerWidth, window.innerWidth-60));
+        const sy=Math.max(60,Math.min((-v.y+1)/2*window.innerHeight, window.innerHeight-120));
+        spawnFloatCard(sd.star,sx,sy);
+      },i*160);
+    });
+  },820);
+}
+
+function spectralRGB(sp){
+  const t=(sp||'G')[0].toUpperCase();
+  const m={O:[.6,.7,1],B:[.7,.82,1],A:[1,1,1],F:[1,.98,.88],G:[1,.92,.5],K:[1,.73,.33],M:[1,.44,.25]};
+  return m[t]||[1,.85,.4];
+}
+
+// Star hover tooltip (reuse cursor ring, show name near cursor)
+let _hoverEl=null;
+function showStarHoverHint(star){
+  if(!star)return;
+  if(!_hoverEl){
+    _hoverEl=document.createElement('div');
+    _hoverEl.style.cssText='position:fixed;z-index:9990;background:rgba(4,8,24,.88);border:1px solid rgba(77,159,255,.3);border-radius:8px;padding:6px 12px;font-size:.72rem;pointer-events:none;color:#c8dcff;backdrop-filter:blur(8px);white-space:nowrap;font-family:Inter,sans-serif;transition:opacity .15s';
+    document.body.appendChild(_hoverEl);
+  }
+  _hoverEl.innerHTML=`<strong style="color:#ffd700">${star.name}</strong> &nbsp;<span style="color:#3a5080;font-family:Space Mono,monospace">${star.dist_ly.toLocaleString()} ly</span>`;
+  _hoverEl.style.display='block';_hoverEl.style.opacity='1';
+}
+function hideStarHoverHint(){
+  if(_hoverEl){_hoverEl.style.opacity='0';setTimeout(()=>{if(_hoverEl)_hoverEl.style.display='none';},150);}
+}
+document.addEventListener('mousemove',e=>{
+  if(_hoverEl&&_hoverEl.style.display==='block'){
+    _hoverEl.style.left=(e.clientX+18)+'px';_hoverEl.style.top=(e.clientY-10)+'px';
+  }
+});
+
+/* ════════ FLOATING STAR CARDS ════════ */
+let _cardSeq=0;
+
+function spawnFloatCard(star,sx,sy){
+  // Remove old un-pinned card for same star
+  Object.entries(S.floatCards).forEach(([id,fc])=>{
+    if(fc.star.name===star.name&&!fc.pinned)removeFloatCard(id);
+  });
+
+  const id='fc'+(++_cardSeq);
+  const [status,evName]=witnessingStatusPlain(star,S.currentEventName,S.currentLY,S.currentYear);
+  const witnessHTML=witnessingStatus(star,S.currentEventName,S.currentLY,S.currentYear);
+  const col=spectralColor(star.spectral_type);
+
+  // Era badge — shown when era mode is on
+  const eraRGB=eraColor(star.dist_ly);
+  const eraHex=`rgb(${Math.round(eraRGB[0]*255)},${Math.round(eraRGB[1]*255)},${Math.round(eraRGB[2]*255)})`;
+  const eraBadge=_eraMode
+    ? `<div style="display:inline-block;margin-bottom:6px;padding:2px 9px;border-radius:20px;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;background:${eraHex}22;border:1px solid ${eraHex}66;color:${eraHex};font-family:'Orbitron',sans-serif">${eraLabel(star.dist_ly)}</div>`
+    : '';
+
+  const el=document.createElement('div');
+  el.className='float-card';
+  el.id=id;
+  // Position near click but keep on screen
+  const w=300,h=340;
+  let left=Math.min(sx+20,window.innerWidth-w-20);
+  let top=Math.min(Math.max(sy-h/2,10),window.innerHeight-h-80);
+  el.style.cssText=`left:${left}px;top:${top}px`;
+
+  el.innerHTML=`
+    <button class="fc-pin" id="pin-${id}" onclick="togglePin('${id}')" title="Pin card">📌</button>
+    <button class="fc-close" onclick="removeFloatCard('${id}')">✕</button>
+    ${eraBadge}
+    <div class="fc-star-name">${star.name}</div>
+    <div class="fc-dist">${star.dist_ly.toLocaleString()} ly · ${star.spectral_type||'?'}-type · ${star.constellation||'—'}</div>
+    <div class="fc-spec"><div class="fc-spec-dot" style="background:${col};box-shadow:0 0 5px ${col}"></div><div class="fc-spec-lbl">${spectralDesc(star.spectral_type)}</div></div>
+    <div class="fc-watch">${witnessHTML}</div>
+    <div class="fc-actions">
+      <button class="fc-btn green" onclick="openStoryCard(S.floatCards['${id}'].star,S.currentEventName,S.currentYear)">✨ Story</button>
+      <button class="fc-btn gold" onclick="openCertForStar(S.floatCards['${id}'].star)">✦ Cert</button>
+      <button class="fc-btn" onclick="saveToArchiveFromCard('${id}')">⭐ Archive</button>
+      <button class="fc-btn" onclick="openShareModal(S.floatCards['${id}'].star,S.currentEventName,S.currentYear)">📤 Share</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:7px">
+      <button class="fc-btn" style="flex:1;background:rgba(77,159,255,.08);border-color:rgba(77,159,255,.25)" onclick="openFindItTonight(S.floatCards['${id}'].star)">🔭 Tonight</button>
+      <button class="fc-btn" style="flex:1;background:rgba(176,96,255,.08);border-color:rgba(176,96,255,.25)" onclick="openStarLetters(S.floatCards['${id}'].star)">✉️ Letters</button>
+    </div>`;
+
+  document.body.appendChild(el);
+  makeDraggable(el,id);
+  drawConnector(id,sx,sy,left+w/2,top+h/2);
+
+  S.floatCards[id]={star,pinned:false,el,sx,sy};
+
+  // Update connector on drag
+  el._updateConnector=()=>{
+    const r=el.getBoundingClientRect();
+    drawConnector(id,S.floatCards[id].sx,S.floatCards[id].sy,r.left+r.width/2,r.top+r.height/2);
+  };
+}
+
+function removeFloatCard(id){
+  const fc=S.floatCards[id];
+  if(fc&&fc.el){
+    fc.el.style.animation='card-float-in .2s reverse forwards';
+    setTimeout(()=>{fc.el.remove();},180);
+  }
+  const conn=document.getElementById('conn-'+id);
+  if(conn)conn.remove();
+  delete S.floatCards[id];
+}
+
+function togglePin(id){
+  const fc=S.floatCards[id];
+  if(!fc)return;
+  fc.pinned=!fc.pinned;
+  fc.el.classList.toggle('pinned',fc.pinned);
+  const btn=document.getElementById('pin-'+id);
+  if(btn){btn.classList.toggle('on',fc.pinned);btn.title=fc.pinned?'Unpin':'Pin card';}
+}
+
+function makeDraggable(el,id){
+  let ox,oy,dragging=false;
+  el.addEventListener('mousedown',e=>{
+    if(e.target.classList.contains('fc-close')||e.target.classList.contains('fc-pin')||e.target.classList.contains('fc-btn'))return;
+    dragging=true;ox=e.clientX-el.getBoundingClientRect().left;oy=e.clientY-el.getBoundingClientRect().top;
+    el.style.transition='box-shadow .2s';el.style.zIndex=450;el.style.cursor='grabbing';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove',e=>{
+    if(!dragging)return;
+    const l=Math.max(0,Math.min(e.clientX-ox,window.innerWidth-el.offsetWidth));
+    const t=Math.max(0,Math.min(e.clientY-oy,window.innerHeight-el.offsetHeight));
+    el.style.left=l+'px';el.style.top=t+'px';
+    if(el._updateConnector)el._updateConnector();
+  });
+  document.addEventListener('mouseup',()=>{if(dragging){dragging=false;el.style.cursor='grab';el.style.zIndex=400;}});
+}
+
+function drawConnector(id,sx,sy,ex,ey){
+  const svg=document.getElementById('connectors');
+  let line=document.getElementById('conn-'+id);
+  if(!line){
+    line=document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.id='conn-'+id;
+    line.setAttribute('stroke','rgba(77,159,255,.25)');
+    line.setAttribute('stroke-width','1');
+    line.setAttribute('stroke-dasharray','4 4');
+    svg.appendChild(line);
+  }
+  line.setAttribute('x1',sx);line.setAttribute('y1',sy);
+  line.setAttribute('x2',ex);line.setAttribute('y2',ey);
+}
+
+function saveToArchiveFromCard(id){
+  const fc=S.floatCards[id];
+  if(!fc)return;
+  openArchiveAdd(S.currentEventName,S.currentYear,'⭐',`Star: ${fc.star.name} · ${fc.star.dist_ly.toLocaleString()} ly`);
+}
+
+function openCertForStar(star){
+  S.certStar=star;S.certEvent=S.currentEventName;S.certYear=S.currentYear;S.certStyle='standard';
+  document.querySelectorAll('.csp-btn').forEach(b=>b.classList.remove('active'));
+  const cspStandard=document.getElementById('csp-standard');
+  if(cspStandard)cspStandard.classList.add('active');
+  const cv=document.getElementById('cert-canvas');
+  cv._star=star;cv._eventName=S.currentEventName;cv._year=S.currentYear;
+  drawCertificate(star,S.currentEventName,S.currentYear,'standard');
+  openModal('cert');
+}
+
+/* ════════ AUTO-HIDE UI ════════ */
+let _idleTimer=null,_dockTimer=null;
+let _searchDone=false; // only start hiding AFTER a successful search
+
+function resetIdleTimer(){
+  showCenterUI();
+  // Only schedule hide if the user has already done a search
+  if(!_searchDone)return;
+  clearTimeout(_idleTimer);
+  _idleTimer=setTimeout(()=>{
+    if(document.activeElement!==document.getElementById('search-input'))
+      hideCenterUI();
+  },3000);
+}
+
+function showCenterUI(forceFull){
+  setCenterCompact(forceFull ? false : _hasExplored);
+  document.getElementById('center-ui').classList.add('visible');
+  document.getElementById('hud').classList.add('visible');
+  document.getElementById('decay-hud').classList.add('visible');
+  S.centerVisible=true;
+}
+function hideCenterUI(){
+  if(document.activeElement===document.getElementById('search-input'))return;
+  document.getElementById('center-ui').classList.remove('visible');
+  S.centerVisible=false;
+}
+
+// Dock shows when mouse is near bottom
+document.getElementById('dock-zone').addEventListener('mouseenter',()=>{
+  document.getElementById('dock').classList.add('visible');
+  S.dockVisible=true;
+  clearTimeout(_dockTimer);
+});
+document.getElementById('dock-zone').addEventListener('mouseleave',e=>{
+  // Keep visible if mouse is on dock itself
+  _dockTimer=setTimeout(()=>{
+    if(!document.getElementById('dock').matches(':hover')){
+      document.getElementById('dock').classList.remove('visible');
+      S.dockVisible=false;
+    }
+  },400);
+});
+document.getElementById('dock').addEventListener('mouseleave',()=>{
+  _dockTimer=setTimeout(()=>{
+    document.getElementById('dock').classList.remove('visible');
+    S.dockVisible=false;
+  },600);
+});
+document.getElementById('dock').addEventListener('mouseenter',()=>clearTimeout(_dockTimer));
+
+// Show UI on any mouse/key activity
+// After a search, moving mouse resets the 12s hide timer
+// Before a search, UI always stays visible
+document.addEventListener('mousemove',()=>{
+  if(_searchDone){resetIdleTimer();}
+  else{showCenterUI();}
+},{passive:true});
+document.addEventListener('keydown',resetIdleTimer,{passive:true});
+
+// Click anywhere on the space (not on a card) shows the search bar
+document.getElementById('space-canvas').addEventListener('click',e=>{
+  if(!e.target.closest('.float-card')&&!S.currentStars.length){
+    showCenterUI();document.getElementById('search-input').focus();
+  }
+});
+
+// center-ui is revealed by initScene() once Three.js is ready
+// (no early showCenterUI call here)
+
+/* ════════ EVENTS LOADING ════════ */
+async function loadEvents(){
+  try{
+    const r=await fetch('/api/events');
+    S.events=await r.json();
+  }catch{S.events=[];}
+  buildAutocomplete('');
+}
+
+function buildAutocomplete(query){
+  const ac=document.getElementById('autocomplete-float');
+  const q=query.toLowerCase().trim();
+  let list=S.events.filter(e=>S.selectedCat==='all'||e.category===S.selectedCat);
+  if(q)list=list.filter(e=>e.name.toLowerCase().includes(q)||String(e.year).includes(q));
+  list=list.slice(0,10);
+  if(!list.length){ac.classList.remove('open');return;}
+  ac.innerHTML=list.map(e=>`
+    <div class="ac-item" onclick="selectEvent(${JSON.stringify(e).replace(/"/g,'&quot;')})">
+      <span class="ac-emoji">${e.emoji||'✦'}</span>
+      <span class="ac-name">${e.name}</span>
+      <span class="ac-yr">${yearLabel(e.year)}</span>
+      <span class="ac-cat">${e.category}</span>
+    </div>`).join('');
+  ac.classList.add('open');
+}
+
+const si=document.getElementById('search-input');
+si.addEventListener('input',()=>buildAutocomplete(si.value));
+si.addEventListener('focus',()=>{buildAutocomplete(si.value);showCenterUI();clearTimeout(_idleTimer);});
+si.addEventListener('blur',()=>setTimeout(()=>document.getElementById('autocomplete-float').classList.remove('open'),200));
+
+document.getElementById('search-go').addEventListener('click',()=>{
+  const v=si.value.trim();
+  if(!v)return;
+  const num=parseInt(v);
+  if(!isNaN(num)){searchStars(num,v,'A year in history');return;}
+  const found=S.events.find(e=>e.name.toLowerCase()===v.toLowerCase());
+  if(found)selectEvent(found);
+  else searchStars(num||0,v,'Custom search');
+});
+
+si.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){document.getElementById('search-go').click();}
+  if(e.key==='Escape'){document.getElementById('autocomplete-float').classList.remove('open');si.blur();}
+});
+
+function selectEvent(ev){
+  document.getElementById('autocomplete-float').classList.remove('open');
+  si.value=ev.name;
+  S.currentCategory=ev.category||'';
+  searchStars(ev.year,ev.name,ev.description||'');
+}
+
+// Category pills
+document.querySelectorAll('.cat-pill').forEach(p=>p.addEventListener('click',()=>{
+  document.querySelectorAll('.cat-pill').forEach(x=>x.classList.remove('active'));
+  p.classList.add('active');
+  S.selectedCat=p.dataset.cat;
+  buildAutocomplete(si.value);
+}));
+
+/* ════════ YEAR / DISTANCE HELPERS ════════ */
+function ly(year){
+  if(!year&&year!==0)return 0;
+  const now=new Date();
+  const fracYear=now.getFullYear()+(now.getMonth()/12)+(now.getDate()/365);
+  return Math.max(0,fracYear-year);
+}
+
+function lyFromDate(year,month,day){
+  const now=new Date();
+  const eventDate=new Date(year,((month||1)-1),(day||1));
+  return Math.max(0,(now-eventDate)/(365.25*24*3600*1000));
+}
+
+function yearLabel(year){
+  if(year===undefined||year===null)return '?';
+  if(year<=-1000000000)return `${Math.abs(Math.round(year/1e9))} billion BCE`;
+  if(year<=-1000000)return `${Math.abs(Math.round(year/1e6))} million BCE`;
+  if(year<=-1000)return `${Math.abs(Math.round(year/1000))}k BCE`;
+  if(year<0)return `${Math.abs(year)} BCE`;
+  if(year===0)return '1 CE';
+  return `${year} CE`;
+}
+
+function smartDuration(diffLY){
+  const totalDays=Math.round(Math.abs(diffLY)*365.25);
+  const future=diffLY>0;
+  if(totalDays===0)return "right now";
+  let amount,unit;
+  if(totalDays<60){amount=totalDays;unit=totalDays===1?'day':'days';}
+  else if(totalDays<730){amount=Math.round(totalDays/30.44);unit=amount===1?'month':'months';}
+  else{const yrs=Math.abs(diffLY);amount=yrs<10?yrs.toFixed(1):Math.round(yrs).toLocaleString();unit=parseFloat(amount)===1?'year':'years';}
+  return future?`in ${amount} ${unit}`:`${amount} ${unit} ago`;
+}
+
+function witnessingStatus(star,eventName,currentLY,year){
+  const usedLY=currentLY!==null&&currentLY!==undefined?currentLY:ly(year);
+  const diffLY=star.dist_ly-usedLY;
+  const totalDays=Math.round(Math.abs(diffLY)*365.25);
+  const evName=eventName||'this event';
+  if(totalDays===0)return `<strong>${star.name}</strong> is receiving this light <em>right now</em>`;
+  let amount,unit;
+  if(totalDays<60){amount=totalDays;unit=totalDays===1?'day':'days';}
+  else if(totalDays<730){amount=Math.round(totalDays/30.44);unit=amount===1?'month':'months';}
+  else{const yrs=Math.abs(diffLY);amount=yrs<10?yrs.toFixed(1):Math.round(yrs).toLocaleString();unit='year'+(parseFloat(amount)===1?'':'s');}
+  if(diffLY>0)return `<strong>${star.name}</strong> will witness <em>${evName}</em> in <span class="watch-yr">${amount} ${unit}</span>`;
+  return `<strong>${star.name}</strong> witnessed <em>${evName}</em> <span class="watch-yr">${amount} ${unit} ago</span>`;
+}
+
+function witnessingStatusPlain(star,eventName,currentLY,year){
+  const usedLY=currentLY!==null&&currentLY!==undefined?currentLY:ly(year);
+  const diffLY=star.dist_ly-usedLY;
+  const totalDays=Math.round(Math.abs(diffLY)*365.25);
+  const evName=eventName||'this event';
+  if(totalDays===0)return['receiving this light right now',evName];
+  let amount,unit;
+  if(totalDays<60){amount=totalDays;unit=totalDays===1?'day':'days';}
+  else if(totalDays<730){amount=Math.round(totalDays/30.44);unit=amount===1?'month':'months';}
+  else{const yrs=Math.abs(diffLY);amount=yrs<10?yrs.toFixed(1):Math.round(yrs).toLocaleString();unit='year'+(parseFloat(amount)===1?'':'s');}
+  if(diffLY>0)return[`will witness in ${amount} ${unit}`,evName];
+  return[`witnessed ${amount} ${unit} ago`,evName];
+}
+
+function spectralColor(sp){
+  const t=(sp||'G')[0].toUpperCase();
+  const m={O:'#9bb8ff',B:'#adc8ff',A:'#ffffff',F:'#fff8e8',G:'#ffe680',K:'#ffbb55',M:'#ff7744'};
+  return m[t]||'#ffd700';
+}
+function spectralDesc(sp){
+  const t=(sp||'?')[0].toUpperCase();
+  const m={O:'O-class · blue supergiant',B:'B-class · blue-white giant',A:'A-class · white star',F:'F-class · yellow-white',G:'G-class · yellow dwarf',K:'K-class · orange dwarf',M:'M-class · red dwarf'};
+  return m[t]||sp||'Unknown type';
+}
+
+/* ════════ SEARCH ════════ */
+async function searchStars(year,eventName,desc,overrideLY=null){
+  const lightYears=overrideLY!==null?overrideLY:ly(year);
+  S.currentLY=lightYears;S.currentEventName=eventName||'';S.currentYear=year;
+
+  // Update HUD
+  document.getElementById('hud-event').textContent=`${eventName} · ${yearLabel(year)}`;
+  document.getElementById('hud-stars').textContent=`${lightYears.toFixed(1)} ly from Earth`;
+  document.getElementById('hud').classList.add('visible');
+
+  // Clear old cards
+  Object.keys(S.floatCards).forEach(id=>{if(!S.floatCards[id].pinned)removeFloatCard(id);});
+
+  // Hint while loading
+  document.getElementById('search-hint').textContent='Searching star catalog…';
+
+  if(lightYears<=0){
+    document.getElementById('search-hint').textContent='This event is in the future — no star has received this light yet.';
+    return;
+  }
+
+  // ── Step 1: fetch stars from API (isolated try/catch)
+  let fetchedStars=[];
+  try{
+    const res=await fetch(`/api/stars?light_years=${lightYears}&tolerance=0.15`);
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    const data=await res.json();
+    fetchedStars=data.stars||[];
+  }catch(err){
+    console.error('Star catalog fetch error:',err);
+    document.getElementById('search-hint').textContent='⚠ Could not reach the star catalog server. Is the app running?';
+    return;
+  }
+
+  // ── Step 2: update state & UI (only after successful fetch)
+  S.currentStars=fetchedStars;
+  document.getElementById('hud-stars').textContent=`${lightYears.toFixed(1)} ly · ${S.currentStars.length} stars found`;
+  document.getElementById('search-hint').textContent=`${S.currentStars.length} stars found — click any glowing star to open its story`;
+
+  // Start decay counter & fragility panel only on success
+  const dayInput=document.getElementById('day-input');
+  const monthInput=document.getElementById('month-select');
+  const d=parseInt(dayInput ? dayInput.value : null)||1;
+  const m=parseInt(monthInput ? monthInput.value : null)||1;
+  startDecayCounter(year,m,d);
+  showFragilityPanel(S.currentCategory||'cosmic');
+
+  // ── Step 3: render in 3D (errors here don't block the result text)
+  try{
+    renderSearchResults(S.currentStars,lightYears);
+  }catch(err){
+    console.error('3D render error:',err);
+  }
+
+  // ── Step 4: start auto-hide timer (3 seconds)
+  _searchDone=true;
+  clearTimeout(_idleTimer);
+  _idleTimer=setTimeout(()=>{
+    if(!document.getElementById('search-input').matches(':focus'))hideCenterUI();
+  },3000);
+}
+
+/* ════════ DECAY COUNTER ════════ */
+let _decayTimer=null;
+function startDecayCounter(year,month,day){
+  if(_decayTimer)clearInterval(_decayTimer);
+  const yr=year||CURRENT_YEAR;
+  const mo=(month||1)-1;
+  const dy=day||1;
+  let eventDate;
+  if(yr<100){eventDate=new Date(0);eventDate.setFullYear(yr,mo,dy);}
+  else{eventDate=new Date(yr,mo,dy);}
+  const hud=document.getElementById('decay-hud');
+  const ticker=document.getElementById('dh-ticker');
+  hud.classList.add('visible');
+  function tick(){
+    const now=new Date();
+    const diffMs=now-eventDate;
+    if(diffMs<0){ticker.textContent='Future event';return;}
+    const totalSec=Math.floor(diffMs/1000);
+    const s=totalSec%60,mi=Math.floor(totalSec/60)%60,h=Math.floor(totalSec/3600)%24;
+    const days=Math.floor(totalSec/86400)%365,yrs=Math.floor(totalSec/31557600);
+    const f=(n,u)=>`<span class="dn">${n.toLocaleString()}</span><span style="color:var(--dim);font-size:.7em"> ${u}</span>`;
+    if(yrs>0)ticker.innerHTML=`${f(yrs,'yr')} ${f(days,'d')} ${f(h,'h')} ${f(mi,'m')} ${f(s,'s')}`;
+    else if(days>0)ticker.innerHTML=`${f(days,'days')} ${f(h,'h')} ${f(mi,'m')} ${f(s,'s')}`;
+    else ticker.innerHTML=`${f(h,'h')} ${f(mi,'m')} ${f(s,'s')}`;
+  }
+  tick();_decayTimer=setInterval(tick,1000);
+}
+
+/* ════════ ERA MODE ════════ */
+let _eraMode=false;
+
+// Era bands keyed on the year the light LEFT that star (CURRENT_YEAR - dist_ly)
+// HYG catalog tops out ~1800 ly → yr range ≈ 226 CE … 2026 CE
+// Extend scale down to BCE for deep-catalog stars / future Gaia data
+const ERA_BANDS=[
+  {maxYr:-3000, rgb:[0.61,0.36,0.70], hex:'#9c5cb3', label:'Prehistoric'},
+  {maxYr:  -500, rgb:[0.85,0.40,0.12], hex:'#d9661f', label:'Ancient'},
+  {maxYr:   500, rgb:[0.18,0.58,0.90], hex:'#2e94e6', label:'Classical'},
+  {maxYr:  1000, rgb:[0.88,0.14,0.42], hex:'#e0246b', label:'Medieval'},
+  {maxYr:  1500, rgb:[0.14,0.72,0.42], hex:'#24b86b', label:'Renaissance'},
+  {maxYr:  1800, rgb:[0.92,0.62,0.10], hex:'#eb9e19', label:'Early Modern'},
+  {maxYr:  9999, rgb:[0.95,0.82,0.14], hex:'#f2d124', label:'Modern'},
+];
+
+function eraColor(distLY){
+  const yr=CURRENT_YEAR-distLY;
+  // Find surrounding bands and lerp for smooth transitions
+  let loIdx=0;
+  for(let i=0;i<ERA_BANDS.length-1;i++){
+    if(yr<=ERA_BANDS[i].maxYr){loIdx=i;break;}
+    loIdx=i+1;
+  }
+  if(loIdx<=0)return ERA_BANDS[0].rgb;
+  if(loIdx>=ERA_BANDS.length-1)return ERA_BANDS[ERA_BANDS.length-1].rgb;
+  const lo=ERA_BANDS[loIdx-1], hi=ERA_BANDS[loIdx];
+  const span=hi.maxYr-lo.maxYr;
+  const t=span===0?0:Math.max(0,Math.min(1,(yr-lo.maxYr)/span));
+  return[
+    lo.rgb[0]+(hi.rgb[0]-lo.rgb[0])*t,
+    lo.rgb[1]+(hi.rgb[1]-lo.rgb[1])*t,
+    lo.rgb[2]+(hi.rgb[2]-lo.rgb[2])*t,
+  ];
+}
+
+function eraLabel(distLY){
+  const yr=CURRENT_YEAR-distLY;
+  for(const b of ERA_BANDS){if(yr<=b.maxYr)return b.label;}
+  return ERA_BANDS[ERA_BANDS.length-1].label;
+}
+
+function buildEraLegend(){
+  const container=document.getElementById('era-legend');
+  if(!container)return;
+  container.innerHTML=`<div class="era-legend-title">Stars coloured by the era they are currently watching on Earth</div>`
+    +ERA_BANDS.map(b=>`<div class="el-row" data-era="${b.label}"><div class="el-dot" style="background:${b.hex};box-shadow:0 0 5px ${b.hex}88"></div>${b.label}</div>`).join('');
+}
+
+function highlightActiveLegendEras(){
+  if(!S.currentStars||!S.currentStars.length)return;
+  const presentEras=new Set(S.currentStars.map(s=>eraLabel(s.dist_ly)));
+  document.querySelectorAll('#era-legend .el-row').forEach(row=>{
+    row.classList.toggle('active-era',presentEras.has(row.dataset.era));
+  });
+}
+
+function toggleEraMode(){
+  _eraMode=!_eraMode;
+
+  // Update dock button
+  const btn=document.getElementById('dock-era');
+  if(btn){
+    btn.classList.toggle('active',_eraMode);
+    btn.querySelector('.di-icon').textContent=_eraMode?'🎨':'🏛';
+    btn.title=_eraMode?'Era Mode ON — click to turn off':'Era Mode';
+  }
+
+  // Show/hide legend
+  document.getElementById('era-legend').classList.toggle('visible',_eraMode);
+
+  // Update star vertex colors IN PLACE — no ripple, instant swap
+  if(_resultStars&&_starData3d.length){
+    const colAttr=_resultStars.geometry.attributes.color;
+    if(colAttr){
+      _starData3d.forEach((sd,i)=>{
+        if(!sd||!sd.star)return;
+        const diff=Math.abs(sd.star.dist_ly-(S.currentLY||sd.star.dist_ly));
+        const brightness=diff<0.5?1:diff<2?0.8:0.6;
+        const rgb=_eraMode ? eraColor(sd.star.dist_ly) : spectralRGB(sd.star.spectral_type);
+        colAttr.array[i*3]  =rgb[0]*brightness;
+        colAttr.array[i*3+1]=rgb[1]*brightness;
+        colAttr.array[i*3+2]=rgb[2]*brightness;
+      });
+      colAttr.needsUpdate=true;
+    }
+  }
+
+  // Highlight which eras are present
+  if(_eraMode) highlightActiveLegendEras();
+
+  // Dim background stars in era mode so search stars pop
+  if(_backgroundStars){
+    _backgroundStars.traverse(obj=>{
+      if(obj.isPoints){
+        obj.material.opacity=_eraMode?0.35:1;
+        obj.material.needsUpdate=true;
+      }
+    });
+  }
+
+  setDebugState('ok',{status:_eraMode?'ERA MODE ON':'era mode off',eras:_eraMode?[...new Set(S.currentStars.map(s=>eraLabel(s.dist_ly)))].join(', '):'—'});
+}
+
+/* ════════ FIND IT TONIGHT ════════ */
+let _fitStar=null;
+
+function openFindItTonight(star){
+  // star is optional — if called from dock with no args, use first result star
+  _fitStar = star || (S.currentStars.length ? S.currentStars[0] : null);
+  document.getElementById('fit-year').value = S.currentYear||'';
+  document.getElementById('fit-result').style.display='none';
+  document.getElementById('fit-modal').classList.add('open');
+  if(_fitStar && S.currentYear) runFindItTonight();
+}
+
+function closeFindItTonight(){
+  document.getElementById('fit-modal').classList.remove('open');
+}
+
+async function runFindItTonight(){
+  const yearVal=parseInt(document.getElementById('fit-year').value);
+  if(isNaN(yearVal)){alert('Enter a valid year');return;}
+
+  // Find closest star to that light-year distance
+  const targetLY = Math.max(0, 2026 - yearVal);
+  if(targetLY===0){
+    document.getElementById('fit-result').style.display='block';
+    document.getElementById('fit-stat').innerHTML=`<em>This event is in the future — the light hasn't left Earth yet.</em>`;
+    return;
+  }
+
+  // Fetch stars if needed
+  let star = _fitStar;
+  if(!star || Math.abs(star.dist_ly - targetLY) > targetLY*0.2){
+    try{
+      const res=await fetch(`/api/stars?light_years=${targetLY}&tolerance=0.15`);
+      const data=await res.json();
+      if(data.stars&&data.stars.length) star=data.stars[0];
+    }catch(e){}
+  }
+  if(!star){
+    document.getElementById('fit-result').style.display='block';
+    document.getElementById('fit-stat').innerHTML='<em>No star found at that distance in our catalog.</em>';
+    return;
+  }
+  _fitStar=star;
+
+  // Get user location
+  const lat=S.userLat||25.2;
+  const lon=S.userLon||55.27;
+
+  try{
+    const r=await fetch(`/api/sky-position?ra=${star.ra}&dec=${star.dec}&lat=${lat}&lon=${lon}`);
+    const sky=await r.json();
+    renderFindItTonight(star,sky,yearVal,targetLY);
+  }catch(e){
+    document.getElementById('fit-result').style.display='block';
+    document.getElementById('fit-stat').innerHTML='<em>Could not compute sky position.</em>';
+  }
+}
+
+function renderFindItTonight(star,sky,year,targetLY){
+  document.getElementById('fit-result').style.display='block';
+  const badge=document.getElementById('fit-badge');
+  badge.className='fit-badge '+(sky.visible_now?'visible':'hidden');
+  badge.textContent=sky.visible_now?'Visible Right Now':'Below Horizon Now';
+
+  // Position star dot in sky view
+  // x = azimuth (0=N, 90=E, 180=S, 270=W) → map to 0–100% width
+  // y = altitude (0=horizon, 90=zenith) → map to 100–0% height
+  const dot=document.getElementById('fit-star-dot');
+  const xPct=(sky.az_now/360)*100;
+  const yPct=Math.max(5,Math.min(90, 100-(sky.alt_now/90)*85));
+  dot.style.left=xPct+'%';
+  dot.style.top=yPct+'%';
+  dot.style.opacity=sky.alt_now>0?'1':'0.3';
+
+  // Draw horizon stars on canvas
+  const cv=document.getElementById('fit-sky-canvas');
+  const ctx=cv.getContext('2d');
+  cv.width=cv.offsetWidth||440; cv.height=cv.offsetHeight||200;
+  ctx.clearRect(0,0,cv.width,cv.height);
+  for(let i=0;i<120;i++){
+    const sx=Math.random()*cv.width;
+    const sy=Math.random()*cv.height*0.7;
+    const sz=Math.random()*1.2+0.4;
+    ctx.beginPath();
+    ctx.arc(sx,sy,sz,0,Math.PI*2);
+    ctx.fillStyle=`rgba(255,255,255,${0.3+Math.random()*0.5})`;
+    ctx.fill();
+  }
+
+  const yr=yearLabel(year);
+  const dirNow=`<span class="fit-dir">${sky.compass}</span> at <span class="fit-dir">${Math.max(0,sky.alt_now).toFixed(0)}°</span>`;
+  const dirBest=`<span class="fit-dir">${sky.best_compass}</span> at <span class="fit-dir">${sky.best_alt.toFixed(0)}°</span>`;
+  document.getElementById('fit-stat').innerHTML=`
+    <strong>${star.name}</strong> (${star.dist_ly.toFixed(1)} ly · ${star.constellation||'—'}) is receiving the light from <strong>${yr}</strong> right now.<br><br>
+    ${sky.visible_now
+      ? `Face <strong>${dirNow}</strong> to see it in tonight's sky.`
+      : `It's below the horizon right now, but peaks at ${dirBest} around <strong>${sky.best_time_utc}</strong>.`
+    }<br>
+    <span style="color:var(--dim);font-size:.68rem">Visible ${sky.above_horizon_pct}% of the next 24 hours from your location.</span>`;
+}
+
+/* ════════ STAR LETTERS ════════ */
+let _lettersStarId=null, _lettersStarName='';
+
+function _starId(star){ return (star.name||'unknown').toLowerCase().replace(/\s+/g,'_')+'_'+Math.round(star.dist_ly); }
+
+async function openStarLetters(star){
+  star = star || (S.currentStars.length ? S.currentStars[0] : null);
+  if(!star){ alert('Search for an event first to pick a star.'); return; }
+  _lettersStarId = _starId(star);
+  _lettersStarName = star.name;
+  document.getElementById('letters-sub').textContent=
+    `Messages left on ${star.name} (${star.dist_ly.toFixed(1)} ly) across time. Future visitors will find yours here.`;
+  document.getElementById('letter-author').value='';
+  document.getElementById('letter-msg').value='';
+  document.getElementById('letter-year').value=S.currentYear||'';
+  document.getElementById('letters-modal').classList.add('open');
+  await loadLetters();
+}
+
+function closeStarLetters(){ document.getElementById('letters-modal').classList.remove('open'); }
+
+async function loadLetters(){
+  const list=document.getElementById('letters-list');
+  list.innerHTML='<div class="letters-empty">Loading…</div>';
+  try{
+    const r=await fetch(`/api/letters/${encodeURIComponent(_lettersStarId)}`);
+    const letters=await r.json();
+    if(!letters.length){
+      list.innerHTML='<div class="letters-empty">No letters yet.<br>Be the first to leave a message on this star.</div>';
+      return;
+    }
+    list.innerHTML=letters.map(l=>`
+      <div class="letter-card">
+        <div class="letter-author">${l.author||'Anonymous'} ${l.year?'· '+l.year:''}</div>
+        <div class="letter-msg">${escHtml(l.message)}</div>
+        <div class="letter-meta">Written ${l.written||'unknown date'}</div>
+      </div>`).join('');
+  }catch(e){
+    list.innerHTML='<div class="letters-empty">Could not load letters.</div>';
+  }
+}
+
+async function submitLetter(){
+  const msg=document.getElementById('letter-msg').value.trim();
+  if(!msg){alert('Write something first.');return;}
+  const author=document.getElementById('letter-author').value.trim()||'Anonymous';
+  const year=document.getElementById('letter-year').value.trim();
+  try{
+    const r=await fetch(`/api/letters/${encodeURIComponent(_lettersStarId)}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({author,message:msg,year}),
+    });
+    const data=await r.json();
+    if(data.ok){
+      document.getElementById('letter-msg').value='';
+      document.getElementById('letter-author').value='';
+      await loadLetters();
+    }
+  }catch(e){ alert('Could not save letter. Is the server running?'); }
+}
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ════════ FRAGILITY PANEL ════════ */
+const FRAGILITY={
+  indigenous:['<em>3,054 languages</em> have fewer than 1,000 living speakers. One dies every two weeks.','<em>40% of the world\'s languages</em> are at risk of vanishing this century — and with them, irreplaceable knowledge.'],
+  culture:['<em>90% of all silent films</em> ever made have been lost forever — burned, decayed, or discarded.','The Library of Alexandria held 400,000 scrolls. Most burned. The light from the scholars who wrote them is still traveling.'],
+  civil:['Over <em>5,000 civil rights documents</em> have been deliberately destroyed since 1865. The light from those acts of courage cannot be erased.'],
+  cosmic:['The average lifespan of a <em>digital archive</em> is 10 years. The light from this moment has no expiry date.'],
+  default:['A website lives an average of <em>2.7 years</em>. This starlight has been traveling since before your grandparents were born.'],
+};
+function showFragilityPanel(cat){
+  const pool=FRAGILITY[cat]||FRAGILITY.default;
+  const stat=pool[Math.floor(Math.random()*pool.length)];
+  document.getElementById('fragility-stat').innerHTML=stat;
+  document.getElementById('fragility-bar').classList.add('visible');
+  setTimeout(()=>document.getElementById('fragility-bar').classList.remove('visible'),8000);
+}
+
+/* ════════ DOCK BUTTONS ════════ */
+function openCertFromDock(){
+  if(S.currentStars.length)openCertForStar(S.currentStars[0]);
+  else openModal('custom');
+}
+function pickRandom(){
+  if(!S.events.length)return;
+  const ev=S.events[Math.floor(Math.random()*S.events.length)];
+  si.value=ev.name;selectEvent(ev);
+}
+
+/* ════════ PANEL (archive) ════════ */
+function openPanel(type){
+  const overlay=document.getElementById('panel-overlay');
+  const content=document.getElementById('panel-content');
+  document.getElementById('panel-title').textContent=type==='archive'?'✦ Family Archive':'Panel';
+  if(type==='archive'){
+    const archive=loadArchive();
+    content.innerHTML=`
+      <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <button class="archive-add-btn" onclick="openArchiveAdd()">＋ Preserve a Moment</button>
+        <button class="pdf-export-btn" onclick="exportArchivePDF()">📄 Download PDF</button>
+      </div>
+      ${renderArchiveHTML(archive)}
+      <div class="world-divider"><span>World Moments — Stories from across humanity</span></div>
+      <div class="archive-grid">${renderWorldMomentsHTML()}</div>
+      <div class="preservation-bar">The light from every moment listed here is already traveling through space.<br><em>It cannot be recalled. It cannot decay. It carries your story forever.</em></div>`;
+  }
+  overlay.classList.add('open');
+}
+function closePanel(){document.getElementById('panel-overlay').classList.remove('open');}
+
+function renderArchiveHTML(archive){
+  if(!archive.length)return`<div class="archive-empty">No moments preserved yet.<br>Every birthday and wedding is already sending light into space.<br><em>Preserve one now.</em></div>`;
+  return`<div class="archive-grid">${archive.map(m=>`
+    <div class="archive-card">
+      <button class="ac-delete" onclick="deleteArchiveMoment(${m.id});openPanel('archive')">✕</button>
+      <span class="ac-emoji">${m.emoji}</span>
+      <div class="ac-name">${m.name}</div>
+      <div class="ac-date">${m.dateStr}</div>
+      ${m.note?`<div class="ac-note">"${m.note}"</div>`:''}
+      <div class="ac-witness">${archiveMomentWitnessText(m)}</div>
+      <button class="audio-record-btn" data-record="${m.id}" onclick="toggleRecording(${m.id},this)">🎙 Add Voice</button>
+    </div>`).join('')}</div>`;
+}
+
+/* ════════ MODALS ════════ */
+function openModal(id){document.getElementById('modal-'+id).classList.add('open');}
+function closeModal(id){document.getElementById('modal-'+id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));
+    closePanel();
+  }
+});
+
+/* ════════ CERTIFICATE ════════ */
+let _certStyle='standard';
+function setCertStyle(style,btn){
+  _certStyle=style;
+  document.querySelectorAll('.csp-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const cv=document.getElementById('cert-canvas');
+  if(cv._star)drawCertificate(cv._star,cv._eventName,cv._year,style);
+}
+function openCertModal(star,eventName,year){openCertForStar(star);}
+
+function drawCertificate(star,eventName,year,style){
+  const cv=document.getElementById('cert-canvas');
+  cv._star=star;cv._eventName=eventName;cv._year=year;cv._certStyle=style||'standard';
+  const W=600,H=480;cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+
+  // Background
+  const bg=ctx.createLinearGradient(0,0,W,H);
+  bg.addColorStop(0,'#030510');bg.addColorStop(.5,'#070b20');bg.addColorStop(1,'#040818');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+  // Starfield (seeded)
+  let rng=(star.name.split('').reduce((a,c)=>a+c.charCodeAt(0),0)+(year||0))>>>0;
+  const r=()=>{rng=(rng*1664525+1013904223)&0xffffffff;return(rng>>>0)/0xffffffff;};
+  for(let i=0;i<200;i++){
+    const x=r()*W,y=r()*H,s=r()*1.5+.2,a=r()*.8+.1;
+    ctx.beginPath();ctx.arc(x,y,s,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${a})`;ctx.fill();
+  }
+
+  // Gold border
+  const grd=ctx.createLinearGradient(0,0,W,H);
+  grd.addColorStop(0,'rgba(255,215,0,.6)');grd.addColorStop(.5,'rgba(255,215,0,.2)');grd.addColorStop(1,'rgba(255,215,0,.6)');
+  ctx.strokeStyle=grd;ctx.lineWidth=1.5;
+  ctx.strokeRect(12,12,W-24,H-24);
+  ctx.strokeRect(18,18,W-36,H-36);
+
+  ctx.textAlign='center';
+
+  if(style==='passdown'){
+    // PASS IT DOWN style
+    const futureYr=Math.round(star.dist_ly)+(year||CURRENT_YEAR);
+    const age18yr=futureYr+(18-(CURRENT_YEAR-(year||CURRENT_YEAR)));
+    ctx.fillStyle='rgba(255,215,0,.5)';ctx.font='bold 11px Orbitron,sans-serif';
+    ctx.fillText('A LETTER TO A FUTURE GENERATION',W/2,50);
+    ctx.fillStyle='rgba(255,255,255,.7)';ctx.font='10px Inter,sans-serif';
+    ctx.fillText(`from the people of ${yearLabel(year)}`,W/2,70);
+    ctx.fillStyle='#fff';ctx.font='bold 26px Orbitron,sans-serif';
+    ctx.fillText(star.name,W/2,130);
+    ctx.fillStyle='rgba(255,215,0,.8)';ctx.font='11px Space Mono,sans-serif';
+    ctx.fillText(`${star.dist_ly.toLocaleString()} light-years from Earth`,W/2,155);
+    ctx.fillStyle='rgba(200,220,255,.85)';ctx.font='13px Inter,sans-serif';
+    const lines=[
+      `When this moment happened in ${yearLabel(year)},`,
+      `a beam of light left Earth carrying its record.`,
+      `It has been crossing the cosmos ever since.`,
+      ``,
+      `By the year ${futureYr.toLocaleString()}, that light will reach ${star.name}`,
+      `for the first time in the history of the universe.`,
+      ``,
+      `No force in the cosmos can stop it.`,
+      `This story is permanent.`,
+    ];
+    lines.forEach((l,i)=>{ctx.fillText(l,W/2,210+i*22);});
+    ctx.fillStyle='rgba(255,215,0,.4)';ctx.font='10px Orbitron,sans-serif';
+    ctx.fillText('✦ SIRIUS · CODEBREW 2026 · LIGHT NEVER DIES',W/2,H-28);
+  } else {
+    // STANDARD style
+    ctx.fillStyle='rgba(255,215,0,.5)';ctx.font='bold 10px Orbitron,sans-serif';
+    ctx.fillText('SIRIUS — CERTIFICATE OF COSMIC PRESERVATION',W/2,46);
+
+    ctx.fillStyle='rgba(200,220,255,.6)';ctx.font='italic 11px Inter,sans-serif';
+    ctx.fillText('This certifies that the light from',W/2,74);
+
+    ctx.fillStyle='rgba(255,255,255,.95)';ctx.font='bold 28px Orbitron,sans-serif';
+    ctx.fillText(eventName||'This Moment',W/2,112);
+
+    ctx.fillStyle='rgba(200,220,255,.5)';ctx.font='11px Inter,sans-serif';
+    ctx.fillText(`${yearLabel(year)} · ${(S.currentLY||0).toFixed(2)} light-years from Earth`,W/2,136);
+
+    ctx.strokeStyle='rgba(255,215,0,.2)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(60,150);ctx.lineTo(W-60,150);ctx.stroke();
+
+    ctx.fillStyle='rgba(255,215,0,.9)';ctx.font='bold 22px Orbitron,sans-serif';
+    ctx.fillText('is being preserved by',W/2,180);
+
+    const col=spectralColor(star.spectral_type);
+    ctx.fillStyle=col;ctx.font='bold 30px Orbitron,sans-serif';
+    ctx.fillText(star.name,W/2,222);
+    ctx.fillStyle='rgba(200,220,255,.6)';ctx.font='12px Space Mono,sans-serif';
+    ctx.fillText(`${star.dist_ly.toLocaleString()} light-years · ${star.spectral_type||'?'}-type · ${star.constellation||'Unknown'}`,W/2,248);
+
+    ctx.strokeStyle='rgba(255,215,0,.2)';ctx.beginPath();ctx.moveTo(60,264);ctx.lineTo(W-60,264);ctx.stroke();
+
+    // Witnessing status
+    const [status]=witnessingStatusPlain(star,eventName,S.currentLY,year);
+    ctx.fillStyle='rgba(200,220,255,.8)';ctx.font='13px Inter,sans-serif';
+    ctx.fillText(star.name+' '+status,W/2,294);
+
+    // Preservation statement
+    ctx.fillStyle='rgba(255,215,0,.35)';ctx.font='10px Inter,sans-serif';
+    const pLines=['This light has already left Earth. It cannot be recalled,','deleted, or lost. It will travel through the cosmos forever.'];
+    pLines.forEach((l,i)=>ctx.fillText(l,W/2,340+i*16));
+
+    // Finding guide section
+    if(S.userLat&&S.userCity){
+      ctx.fillStyle='rgba(77,159,255,.6)';ctx.font='bold 9px Orbitron,sans-serif';
+      ctx.fillText('HOW TO FIND IT TONIGHT',W/2,388);
+      ctx.fillStyle='rgba(200,220,255,.6)';ctx.font='10px Inter,sans-serif';
+      ctx.fillText(`As seen from ${S.userCity}`,W/2,406);
+    }
+
+    ctx.fillStyle='rgba(255,215,0,.35)';ctx.font='9px Orbitron,sans-serif';
+    ctx.fillText('✦ SIRIUS · CODEBREW 2026 · BEYOND THE HORIZON',W/2,H-26);
+  }
+}
+
+function downloadCert(){
+  const cv=document.getElementById('cert-canvas');
+  if(!cv._star)return;
+  const big=document.createElement('canvas');big.width=2400;big.height=1920;
+  const bctx=big.getContext('2d');bctx.drawImage(cv,0,0,2400,1920);
+  const a=document.createElement('a');a.href=big.toDataURL('image/png');
+  a.download=`sirius-${(cv._star.name||'star').replace(/\s+/g,'-').toLowerCase()}.png`;a.click();
+}
+
+/* ════════ SHARE CARD ════════ */
+function openShareModal(star,eventName,year){
+  if(!star)return;
+  const cv=document.getElementById('share-canvas');
+  cv.width=480;cv.height=480;
+  const ctx=cv.getContext('2d');
+  const bg=ctx.createLinearGradient(0,0,480,480);
+  bg.addColorStop(0,'#030510');bg.addColorStop(1,'#0a0618');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,480,480);
+  let rng=(star.name.split('').reduce((a,c)=>a+c.charCodeAt(0),0))>>>0;
+  const r2=()=>{rng=(rng*1664525+1013904223)&0xffffffff;return(rng>>>0)/0xffffffff;};
+  for(let i=0;i<120;i++){const x=r2()*480,y=r2()*480,s=r2()*1.2+.2;ctx.beginPath();ctx.arc(x,y,s,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${r2()*.7+.1})`;ctx.fill();}
+  ctx.textAlign='center';
+  ctx.fillStyle='rgba(255,215,0,.7)';ctx.font='bold 10px Orbitron,sans-serif';ctx.fillText('✦ SIRIUS',240,44);
+  ctx.fillStyle='#fff';ctx.font='bold 22px Orbitron,sans-serif';ctx.fillText(star.name,240,110);
+  ctx.fillStyle='rgba(200,220,255,.65)';ctx.font='12px Space Mono,sans-serif';ctx.fillText(`${star.dist_ly.toLocaleString()} light-years`,240,136);
+  ctx.fillStyle='rgba(255,215,0,.85)';ctx.font='bold 15px Inter,sans-serif';ctx.fillText(`is preserving`,240,180);
+  ctx.fillStyle='#fff';ctx.font='bold 18px Inter,sans-serif';ctx.fillText(eventName||'This Moment',240,208);
+  ctx.fillStyle='rgba(200,220,255,.5)';ctx.font='11px Inter,sans-serif';ctx.fillText(yearLabel(year),240,232);
+  const [status]=witnessingStatusPlain(star,eventName,S.currentLY,year);
+  ctx.fillStyle='rgba(77,159,255,.8)';ctx.font='12px Inter,sans-serif';ctx.fillText(star.name+' '+status,240,280);
+  ctx.fillStyle='rgba(200,220,255,.35)';ctx.font='10px Inter,sans-serif';ctx.fillText('This light has already left Earth.',240,340);ctx.fillText('It cannot be deleted. It cannot decay.',240,358);ctx.fillText('It carries this story forever.',240,376);
+  ctx.strokeStyle='rgba(255,215,0,.2)';ctx.lineWidth=1.5;ctx.strokeRect(12,12,456,456);
+  openModal('share');
+}
+function downloadShare(){const cv=document.getElementById('share-canvas');const a=document.createElement('a');a.href=cv.toDataURL('image/png');a.download='sirius-moment.png';a.click();}
+
+/* ════════ STORY CARD ════════ */
+function drawStoryStars(seed){
+  const cv=document.getElementById('sc-stars-canvas');if(!cv)return;
+  cv.width=cv.offsetWidth||540;cv.height=cv.offsetHeight||400;
+  const ctx=cv.getContext('2d');ctx.clearRect(0,0,cv.width,cv.height);
+  let rng=seed>>>0;const r=()=>{rng=(rng*1664525+1013904223)&0xffffffff;return(rng>>>0)/0xffffffff;};
+  for(let i=0;i<100;i++){const x=r()*cv.width,y=r()*cv.height,s=r()*1.5+.2,a=r()*.7+.2;ctx.beginPath();ctx.arc(x,y,s,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${a})`;ctx.fill();}
+}
+function openStoryCard(star,eventName,year){
+  if(!star)return;
+  const [status]=witnessingStatusPlain(star,eventName,S.currentLY,year);
+  const dist=star.dist_ly;
+  const templates=[
+    `In ${yearLabel(year)}, <em>${eventName}</em> changed the world. A beam of light left Earth in that instant, carrying the full record of that moment. It has been crossing the cosmos ever since — ${dist.toLocaleString()} light-years of silence. ${star.name} ${status}.`,
+    `When <em>${eventName}</em> unfolded in ${yearLabel(year)}, Earth sent a message it never chose to send. That light cannot be stopped, recalled, or erased. Right now, it is ${dist.toLocaleString()} light-years into its eternal journey. ${star.name} ${status}.`,
+    `The light from <em>${eventName}</em> — born in ${yearLabel(year)} — has not lost a single photon. Every wavelength, every quantum of energy from that moment is still intact. ${star.name} ${status}.`,
+  ];
+  const h=star.name.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+  const narrative=templates[h%templates.length];
+  document.getElementById('sc-headline').innerHTML=`${star.name}<span style="font-size:.6em;color:var(--mid);font-weight:400;margin-left:12px">${dist.toLocaleString()} ly</span>`;
+  document.getElementById('sc-sub').textContent=`${eventName} · ${yearLabel(year)}`;
+  document.getElementById('sc-narrative').innerHTML=narrative;
+  const col=spectralColor(star.spectral_type);
+  document.getElementById('sc-star-dot').style.cssText=`width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;background:radial-gradient(circle,${col}33,rgba(61,143,255,.1));box-shadow:0 0 14px ${col}44`;
+  document.getElementById('sc-star-dot').textContent='✦';
+  document.getElementById('sc-witness-text').innerHTML=witnessingStatus(star,eventName,S.currentLY,year);
+  document.getElementById('sc-eternal').textContent=`This light has been traveling for ~${Math.round(dist).toLocaleString()} years. It will never stop.`;
+  const seed=h+(year||0);setTimeout(()=>drawStoryStars(seed),40);
+  document.getElementById('modal-story')._star=star;document.getElementById('modal-story')._eventName=eventName;document.getElementById('modal-story')._year=year;
+  openModal('story');
+}
+function saveStoryCard(){
+  const m=document.getElementById('modal-story');
+  if(m._star)openArchiveAdd(m._eventName,m._year,'⭐',`Star: ${m._star.name}`);
+  closeModal('story');
+}
+
+/* ════════ CUSTOM EVENT ════════ */
+document.getElementById('era-toggle').addEventListener('click',function(){this.classList.toggle('bce');this.textContent=this.classList.contains('bce')?'BCE':'CE';updateDatePrecision();});
+function updateDatePrecision(){
+  const d=parseInt(document.getElementById('day-input').value)||null;
+  const m=parseInt(document.getElementById('month-select').value)||null;
+  const y=parseInt(document.getElementById('year-num-input').value)||null;
+  const bce=document.getElementById('era-toggle').classList.contains('bce');
+  if(y){const yr=bce?-Math.abs(y):y;const lyd=d&&m?lyFromDate(yr,m,d):ly(yr);document.getElementById('year-num-input').dataset.ly=lyd;}
+}
+['day-input','month-select','year-num-input'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el)el.addEventListener('input',updateDatePrecision);
+});
+
+function addCustomEvent(){
+  const name=(document.getElementById('ce-name').value||'').trim();
+  const d=parseInt(document.getElementById('day-input').value)||null;
+  const m=parseInt(document.getElementById('month-select').value)||null;
+  const yRaw=parseInt(document.getElementById('year-num-input').value)||null;
+  const bce=document.getElementById('era-toggle').classList.contains('bce');
+  const y=yRaw?bce?-Math.abs(yRaw):yRaw:null;
+  if(!y){alert('Please enter a year.');return;}
+  const lightYears=d&&m?lyFromDate(y,m,d):ly(y);
+  S.currentCategory='';
+  closeModal('custom');
+  searchStars(y,name||'Your Moment','Custom moment',lightYears);
+}
+
+/* ════════ ARCHIVE ════════ */
+const ARCHIVE_KEY='sirius_family_archive_v1';
+function loadArchive(){try{return JSON.parse(localStorage.getItem(ARCHIVE_KEY)||'[]');}catch{return[];}}
+function saveArchive(data){try{localStorage.setItem(ARCHIVE_KEY,JSON.stringify(data));}catch{}}
+
+let _selectedEmoji='⭐';
+function openArchiveAdd(prefillName='',prefillYear='',prefillEmoji='⭐',prefillNote=''){
+  _selectedEmoji=prefillEmoji||'⭐';
+  document.getElementById('aa-name').value=prefillName||'';
+  document.getElementById('aa-day').value='';document.getElementById('aa-month').value='';
+  document.getElementById('aa-year').value=prefillYear||'';
+  document.getElementById('aa-note').value=prefillNote||'';
+  document.querySelectorAll('.aa-emoji-btn').forEach(b=>b.classList.toggle('selected',b.dataset.emoji===_selectedEmoji));
+  openModal('archive-add');
+}
+document.addEventListener('click',e=>{const b=e.target.closest('.aa-emoji-btn');if(!b)return;document.querySelectorAll('.aa-emoji-btn').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');_selectedEmoji=b.dataset.emoji;});
+
+function archiveMomentWitnessText(moment){
+  const yr=moment.year||0;
+  if(S.currentStars.length&&S.currentLY!==null){
+    const star=S.currentStars[0];
+    const[status]=witnessingStatusPlain(star,moment.name,S.currentLY,yr);
+    return `<strong>${star.name}</strong> (${star.dist_ly.toLocaleString()} ly) — ${status}`;
+  }
+  const t=Math.max(0,CURRENT_YEAR-yr);
+  return t===0?'This light is just beginning its journey…':`Light has traveled ~${t.toLocaleString()} light-years from this moment`;
+}
+
+function saveArchiveMoment(){
+  const name=(document.getElementById('aa-name').value||'').trim();
+  if(!name){document.getElementById('aa-name').focus();return;}
+  const day=parseInt(document.getElementById('aa-day').value)||null;
+  const month=parseInt(document.getElementById('aa-month').value)||null;
+  const year=parseInt(document.getElementById('aa-year').value)||CURRENT_YEAR;
+  const note=(document.getElementById('aa-note').value||'').trim();
+  const dateStr=day&&month?`${day} ${MONTHS[month-1]} ${year}`:`${year}`;
+  const archive=loadArchive();
+  archive.unshift({id:Date.now(),emoji:_selectedEmoji,name,day,month,year,dateStr,note,savedAt:new Date().toISOString()});
+  saveArchive(archive);
+  closeModal('archive-add');
+  openPanel('archive');
+}
+function deleteArchiveMoment(id){saveArchive(loadArchive().filter(m=>m.id!==id));}
+
+/* ════════ AUDIO PINS ════════ */
+let _recorder=null,_chunks=[],_recId=null;
+function toggleRecording(id,btn){
+  if(_recorder&&_recorder.state==='recording'&&_recId===id){
+    _recorder.stop();btn.textContent='🎙 Add Voice';btn.classList.remove('recording');return;
+  }
+  _recId=id;
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    _chunks=[];_recorder=new MediaRecorder(stream);
+    _recorder.ondataavailable=e=>_chunks.push(e.data);
+    _recorder.onstop=()=>{
+      const blob=new Blob(_chunks,{type:'audio/webm'});
+      const reader=new FileReader();
+      reader.onloadend=()=>{const archive=loadArchive();const m=archive.find(x=>x.id===_recId);if(m){m.audio=reader.result;saveArchive(archive);}};
+      reader.readAsDataURL(blob);stream.getTracks().forEach(t=>t.stop());
+    };
+    _recorder.start();btn.textContent='⏹ Stop';btn.classList.add('recording');
+    setTimeout(()=>{if(_recorder&&_recorder.state==='recording')_recorder.stop();btn.textContent='🎙 Add Voice';btn.classList.remove('recording');},60000);
+  }).catch(()=>alert('Microphone access denied.'));
+}
+
+/* ════════ WORLD MOMENTS ════════ */
+const WORLD_MOMENTS=[
+  {emoji:'🌊',name:'First Polynesian Voyagers',dateStr:'~1200 BCE',year:-1200,region:'Pacific',story:'Navigating by stars, swell, and birds — thousands of miles of open ocean without instruments.',star:'Antares',dist_ly:554},
+  {emoji:'📖',name:'The Quran First Recited',dateStr:'610 CE',year:610,region:'Arabia',story:'Muhammad ﷺ received the first revelation. Words memorised and preserved unchanged for 1,400 years.',star:'Alhena',dist_ly:105},
+  {emoji:'🔥',name:'Library of Alexandria Burns',dateStr:'~48 BCE',year:-48,region:'Egypt',story:'Centuries of knowledge burned. But the light from the scholars who studied there is still traveling.',star:'Pollux',dist_ly:34},
+  {emoji:'🐾',name:'First Australian Dreamtime Stories',dateStr:'~50,000 BCE',year:-50000,region:'Australia',story:'The oldest continuous cultural tradition on Earth. 50,000 years before writing was invented.',star:'Fomalhaut',dist_ly:25},
+  {emoji:'🎺',name:'First Jazz Recording',dateStr:'26 Feb 1917',year:1917,region:'New Orleans',story:'A music born of pain, resistance, and joy — now traveling through space forever.',star:'Vega',dist_ly:25},
+  {emoji:'🌱',name:'Wangari Maathai Plants First Tree',dateStr:'5 Jun 1977',year:1977,region:'Kenya',story:'The first of 51 million trees. Nobel Prize. The light from that act is 47 light-years from Earth.',star:'Capella',dist_ly:43},
+  {emoji:'🕊',name:'Mandela Inauguration',dateStr:'10 May 1994',year:1994,region:'South Africa',story:'The first democratically elected president of South Africa. The light of reconciliation, traveling.',star:'Arcturus',dist_ly:37},
+];
+function renderWorldMomentsHTML(){
+  return WORLD_MOMENTS.map(m=>`
+    <div class="archive-card world-card">
+      <span class="ac-emoji">${m.emoji}</span>
+      <div class="ac-name">${m.name}</div>
+      <div class="ac-date">${m.dateStr} · <em style="color:var(--dim)">${m.region}</em></div>
+      <div class="ac-note">"${m.story}"</div>
+      <div class="ac-witness">✦ <strong>${m.star}</strong> (${m.dist_ly.toLocaleString()} ly)</div>
+    </div>`).join('');
+}
+
+/* ════════ PDF EXPORT ════════ */
+async function exportArchivePDF(){
+  const archive=loadArchive();
+  if(!archive.length){alert('Your archive is empty — add some moments first!');return;}
+  const rows=archive.map(m=>`<tr><td>${m.emoji} <strong>${m.name}</strong></td><td>${m.dateStr}</td><td>${archiveMomentWitnessText(m).replace(/<[^>]+>/g,'')}</td><td style="color:#888;font-style:italic">${m.note||'—'}</td></tr>`).join('');
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><style>body{font-family:Georgia,serif;padding:40px;color:#111}h1{font-family:Arial;font-size:26px;letter-spacing:2px}table{width:100%;border-collapse:collapse;margin-top:24px}th{text-align:left;padding:8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#888;border-bottom:2px solid #ddd}td{padding:10px 8px;border-bottom:1px solid #eee;font-size:13px}.preserve{background:#f9f6e8;border:1px solid #e8d88a;border-radius:6px;padding:14px;margin:20px 0;font-size:13px;line-height:1.7;color:#5a4a00}.footer{margin-top:40px;font-size:11px;color:#aaa;text-align:center;border-top:1px solid #eee;padding-top:14px}</style></head><body><h1>✦ SIRIUS — Family Cultural Archive</h1><p style="color:#666;font-size:13px">Generated ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})} · ${archive.length} moment${archive.length!==1?'s':''} preserved</p><div class="preserve">The light from every moment in this archive has already left Earth. It is traveling through space right now. No server failure, hard drive crash, or act of censorship can recall it. These stories are permanently written into the cosmos.</div><table><thead><tr><th>Moment</th><th>Date</th><th>Star &amp; Status</th><th>Note</th></tr></thead><tbody>${rows}</tbody></table><div class="footer">Built with Sirius · Codebrew 2026 · "Light never dies. Neither does your story."</div></body></html>`;
+  const blob=new Blob([html],{type:'text/html'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='sirius-family-archive.html';a.click();
+}
+
+/* ════════ LOCATION ════════ */
+async function fetchCity(lat,lon){
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,{headers:{'Accept-Language':'en'}});
+    const d=await r.json();const a=d.address||{};
+    const city=a.city||a.town||a.village||a.suburb||a.county||a.state||'';
+    const country=a.country||'';
+    S.userCity=city&&country?`${city}, ${country}`:city||country||`${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
+  }catch{S.userCity=`${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;}
+}
+
+// Request location silently
+if(navigator.geolocation&&navigator.geolocation.getCurrentPosition){
+  navigator.geolocation.getCurrentPosition(pos=>{
+    S.userLat=pos.coords.latitude;S.userLon=pos.coords.longitude;
+    fetchCity(S.userLat,S.userLon);
+  },()=>{},{ enableHighAccuracy:false,timeout:8000 });
+}
+
+/* ════════ FAMILY CONSTELLATION ════════ */
+let _familyLineGroup=null;
+let _familyDotGroup=null;
+let _familyResults=[];
+
+const FM_COLORS=['#22d3a4','#4d9fff','#ffd700','#b060ff'];
+const FM_MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// Populate day selects on page load
+(function initDaySelects(){
+  document.querySelectorAll('.fm-day-in').forEach(sel=>{
+    for(let d=1;d<=31;d++) sel.add(new Option(d,d));
+  });
+})();
+
+function fmSwitchTab(tab){
+  document.getElementById('fm-tab-map').classList.toggle('active',tab==='map');
+  document.getElementById('fm-tab-lookup').classList.toggle('active',tab==='lookup');
+  document.getElementById('fm-tab-map-content').style.display=tab==='map'?'':'none';
+  document.getElementById('fm-tab-lookup-content').style.display=tab==='lookup'?'':'none';
+  if(tab==='lookup') populateRLDatalist();
+}
+
+function openFamilyConstellation(){
+  document.getElementById('family-modal').classList.add('open');
+  document.getElementById('fm-results').style.display='none';
+  document.getElementById('fm-loading').style.display='none';
+  document.getElementById('fm-error').style.display='none';
+  fmSwitchTab('map');
+  _familyResults=[];
+}
+
+function closeFamilyConstellation(){
+  document.getElementById('family-modal').classList.remove('open');
+  clearFamilyFrom3D();
+}
+
+function _makeDateRow(name1='',name2=''){
+  const dayOpts=Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');
+  const monOpts=FM_MONTHS.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
+  return `<div class="fm-member-row">
+    <input class="fm-name-in" placeholder="${name1}" maxlength="30"/>
+    <div class="fm-date-group">
+      <select class="fm-day-in"><option value="">DD</option>${dayOpts}</select>
+      <select class="fm-mon-in"><option value="">Mon</option>${monOpts}</select>
+      <input class="fm-year-in" type="number" placeholder="YYYY" min="1800" max="2026"/>
+    </div>
+    <button class="fm-remove" onclick="fmRemoveRow(this)" title="Remove">✕</button>
+  </div>`;
+}
+
+function fmAddRow(){
+  const container=document.getElementById('fm-members');
+  if(container.children.length>=4)return;
+  const div=document.createElement('div');
+  div.innerHTML=_makeDateRow('Name');
+  container.appendChild(div.firstElementChild);
+}
+
+function fmRemoveRow(btn){
+  const container=document.getElementById('fm-members');
+  if(container.children.length<=1)return;
+  btn.closest('.fm-member-row').remove();
+}
+
+// Compute precise light-years from a date (day optional)
+function _targetLYFromDate(year,month,day){
+  if(month&&day){
+    const now=new Date();
+    const birthDate=new Date(year,month-1,day);
+    const ageYears=(now-birthDate)/(365.25*24*3600*1000);
+    return Math.max(0.5,ageYears);
+  }
+  return Math.max(0.5,CURRENT_YEAR-year);
+}
+
+async function runFamilyConstellation(){
+  const rows=[...document.querySelectorAll('#fm-members .fm-member-row')];
+  const members=rows.map(r=>({
+    name:(r.querySelector('.fm-name-in').value||'').trim()||'Person',
+    year:parseInt(r.querySelector('.fm-year-in').value)||null,
+    month:parseInt(r.querySelector('.fm-mon-in').value)||null,
+    day:parseInt(r.querySelector('.fm-day-in').value)||null
+  })).filter(m=>m.year&&m.year>=1800&&m.year<=CURRENT_YEAR);
+
+  const errEl=document.getElementById('fm-error');
+  errEl.style.display='none';
+  if(!members.length){
+    errEl.textContent='Please enter at least one birth year.';
+    errEl.style.display='block';
+    return;
+  }
+
+  document.getElementById('fm-loading').style.display='block';
+  document.getElementById('fm-results').style.display='none';
+
+  try{
+    const resolved=await Promise.all(members.map(async(m,i)=>{
+      const targetLY=_targetLYFromDate(m.year,m.month,m.day);
+      const tol=targetLY<20?0.5:targetLY<60?0.3:0.2;
+      const resp=await fetch(`/api/stars?light_years=${targetLY.toFixed(2)}&tolerance=${tol}`);
+      const data=await resp.json();
+      const stars=data.stars||[];
+
+      // Pick closest match
+      let best=null,bestDiff=Infinity;
+      for(const s of stars){
+        const diff=Math.abs((s.dist_ly||0)-targetLY);
+        if(diff<bestDiff){bestDiff=diff;best=s;}
+      }
+      // Deterministic fallback — seed RA/Dec from birth year so it's consistent
+      if(!best||bestDiff>targetLY*0.6){
+        const seed=(m.year*397+i*137)%360;
+        best={
+          name:`${m.name}'s Birth Star`,
+          dist_ly:targetLY,
+          ra:seed,
+          dec:(((m.year*53+i*31)%120)-60),
+          spectral_type:'G',
+          constellation:'—',
+          id:`synth_${i}`
+        };
+      }
+
+      // Sky position
+      let sky=null;
+      if(S.userLat!==null&&S.userLon!==null&&best.ra!=null&&best.dec!=null){
+        try{
+          const sp=await fetch(`/api/sky-position?ra=${best.ra}&dec=${best.dec}&lat=${S.userLat}&lon=${S.userLon}&year=${m.year}&dist_ly=${best.dist_ly}`);
+          sky=await sp.json();
+        }catch{}
+      }
+
+      const dateLabel=m.day&&m.month?`${m.day} ${FM_MONTHS[m.month-1]} ${m.year}`:`${m.year}`;
+      return {member:{...m,dateLabel},star:best,sky,color:FM_COLORS[i%FM_COLORS.length],targetLY};
+    }));
+
+    _familyResults=resolved;
+    document.getElementById('fm-loading').style.display='none';
+    renderFamilyResults(resolved);
+  }catch(e){
+    console.error('Family constellation error',e);
+    document.getElementById('fm-loading').style.display='none';
+    errEl.textContent='Could not load star data. Please try again.';
+    errEl.style.display='block';
+  }
+}
+
+function _skyDirectionTip(sky){
+  if(!sky) return `<span style="color:var(--dim)">Enable location for tonight's directions</span>`;
+  if(sky.visible_now){
+    const alt=(sky.alt_now||0).toFixed(0);
+    const heightDesc=alt>60?'high overhead':alt>30?'about a third up the sky':alt>10?'low on the horizon':'very low — needs a clear horizon';
+    return `<span style="color:#22d3a4">▲ Visible right now</span><br>Face <strong style="color:#fff">${sky.compass}</strong>, look <strong>${alt}°</strong> up — ${heightDesc}.`;
+  }else if((sky.best_alt||0)>0){
+    const alt=(sky.best_alt||0).toFixed(0);
+    return `Rises tonight — best at <strong style="color:#fff">${sky.best_compass}</strong>, <strong>${alt}°</strong> up around <strong>${sky.best_time_utc||'?'} UTC</strong>.`;
+  }
+  return `<span style="color:var(--dim)">Below the horizon tonight from your location</span>`;
+}
+
+function renderFamilyResults(results){
+  document.getElementById('fm-results').style.display='block';
+  drawFamilySkyCanvas(results);
+
+  document.getElementById('fm-star-cards').innerHTML=results.map((r)=>{
+    const dist=r.star.dist_ly;
+    const preciseDist=dist.toLocaleString(undefined,{maximumFractionDigits:1});
+    const tip=_skyDirectionTip(r.sky);
+    return `<div class="fm-star-card">
+      <div class="fm-star-dot" style="background:${r.color};box-shadow:0 0 10px ${r.color}70;margin-top:4px"></div>
+      <div class="fm-star-info">
+        <div class="fm-star-person">${r.member.name} · born ${r.member.dateLabel}</div>
+        <div class="fm-star-name">${r.star.name}</div>
+        <div class="fm-star-dist">${preciseDist} ly · ${r.star.spectral_type||'?'}-type · ${r.star.constellation||'—'}</div>
+        <div class="fm-find-tip">${tip}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function drawFamilySkyCanvas(results){
+  const canvas=document.getElementById('fm-sky-canvas');
+  const W=canvas.offsetWidth||520;
+  const H=210;
+  canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');
+
+  // Sky gradient
+  const bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#010510');bg.addColorStop(0.65,'#05101e');bg.addColorStop(1,'#0c1a08');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+  // Milky Way suggestion (faint band)
+  const mw=ctx.createLinearGradient(0,H*0.15,0,H*0.85);
+  mw.addColorStop(0,'transparent');mw.addColorStop(0.5,'rgba(120,140,200,.07)');mw.addColorStop(1,'transparent');
+  ctx.fillStyle=mw;ctx.fillRect(W*0.3,0,W*0.4,H);
+
+  // Background stars
+  let rng=31337;
+  const rr=()=>{rng=(rng*1664525+1013904223)&0xffffffff;return(rng>>>0)/0xffffffff;};
+  for(let i=0;i<90;i++){
+    const sx=rr()*W,sy=rr()*(H-24);
+    const a=rr()*.55+.08;
+    ctx.beginPath();ctx.arc(sx,sy,rr()*.7+.2,0,Math.PI*2);
+    ctx.fillStyle=`rgba(200,215,255,${a})`;ctx.fill();
+  }
+
+  // Horizon
+  ctx.strokeStyle='rgba(34,211,164,.3)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,H-22);ctx.lineTo(W,H-22);ctx.stroke();
+  const hg=ctx.createLinearGradient(0,H-22,0,H);
+  hg.addColorStop(0,'rgba(34,211,164,.06)');hg.addColorStop(1,'transparent');
+  ctx.fillStyle=hg;ctx.fillRect(0,H-22,W,22);
+
+  // Compass labels
+  ctx.font='bold 8px Orbitron,sans-serif';ctx.fillStyle='rgba(34,211,164,.55)';
+  const compassPts=[['N',0],['NE',45],['E',90],['SE',135],['S',180],['SW',225],['W',270],['NW',315]];
+  compassPts.forEach(([lbl,az])=>{
+    const x=(((az+180)%360)/360)*W;
+    ctx.textAlign='center';ctx.fillText(lbl,x,H-7);
+  });
+
+  // Helper: az/alt → canvas x,y
+  const toXY=(az,alt)=>{
+    const x=(((az+180)%360)/360)*W;
+    const y=(H-22)-(Math.max(0,alt)/90)*(H-32);
+    return[x,y];
+  };
+
+  // Draw constellation lines first (behind stars)
+  const plotted=[];
+  results.forEach(r=>{
+    if(!r.sky)return;
+    const useNow=r.sky.visible_now;
+    const alt=useNow?r.sky.alt_now:(r.sky.best_alt||0);
+    if(alt<-15)return;
+    const az=useNow?r.sky.az_now:(r.sky.best_az||0);
+    const[px,py]=toXY(az,Math.max(alt,1.5));
+    plotted.push({px,py,r});
+  });
+
+  if(plotted.length>1){
+    ctx.setLineDash([5,6]);ctx.lineWidth=1;
+    for(let i=0;i<plotted.length-1;i++){
+      const a=plotted[i],b=plotted[i+1];
+      ctx.beginPath();ctx.moveTo(a.px,a.py);ctx.lineTo(b.px,b.py);
+      ctx.strokeStyle='rgba(200,220,255,.2)';ctx.stroke();
+    }
+    if(plotted.length>=3){
+      const a=plotted[plotted.length-1],b=plotted[0];
+      ctx.beginPath();ctx.moveTo(a.px,a.py);ctx.lineTo(b.px,b.py);
+      ctx.strokeStyle='rgba(200,220,255,.14)';ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+
+  // Draw stars on top
+  plotted.forEach(({px,py,r})=>{
+    // Glow ring
+    const grd=ctx.createRadialGradient(px,py,0,px,py,18);
+    grd.addColorStop(0,r.color+'50');grd.addColorStop(1,'transparent');
+    ctx.fillStyle=grd;ctx.beginPath();ctx.arc(px,py,18,0,Math.PI*2);ctx.fill();
+    // Core dot
+    ctx.beginPath();ctx.arc(px,py,4.5,0,Math.PI*2);ctx.fillStyle=r.color;ctx.fill();
+    ctx.beginPath();ctx.arc(px,py,2,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
+    // Name label
+    ctx.font='bold 10px Inter,sans-serif';ctx.fillStyle=r.color;ctx.textAlign='center';
+    ctx.fillText(r.member.name,px,py-13);
+    if(!r.sky.visible_now&&(r.sky.best_alt||0)>0){
+      ctx.font='9px Inter,sans-serif';ctx.fillStyle='rgba(200,200,255,.5)';
+      ctx.fillText('(best time)',px,py+16);
+    }
+  });
+
+  // Note if some are off-horizon
+  const hidden=results.filter(r=>{
+    if(!r.sky)return true;
+    const alt=r.sky.visible_now?r.sky.alt_now:(r.sky.best_alt||0);
+    return alt<-15;
+  }).length;
+  if(hidden>0){
+    ctx.font='9px Inter,sans-serif';ctx.fillStyle='rgba(180,180,200,.4)';ctx.textAlign='right';
+    ctx.fillText(`${hidden} star${hidden>1?'s':''} not visible tonight`,W-8,H-8);
+  }
+}
+
+function showFamilyIn3D(){
+  if(!_scene||!_world){
+    alert('3D scene is not ready yet. Wait a moment and try again.');
+    return;
+  }
+  if(!_familyResults.length){
+    alert('No family stars to show. Map the constellation first.');
+    return;
+  }
+  clearFamilyFrom3D();
+
+  const dotGroup=new THREE.Group();
+  const positions=[];
+
+  _familyResults.forEach((r,i)=>{
+    // Use deterministic fallback position if ra/dec missing or both zero
+    const ra=((r.star.ra!=null)?r.star.ra:((i*137+23)%360))*(Math.PI/180);
+    const dec=((r.star.dec!=null)?r.star.dec:((i*53+10)%120)-60)*(Math.PI/180);
+    const radius=180+i*12; // stagger slightly so they don't overlap
+    const x=radius*Math.cos(dec)*Math.cos(ra);
+    const y=radius*Math.sin(dec);
+    const z=-radius*Math.cos(dec)*Math.sin(ra);
+    positions.push({x,y,z,color:r.color,name:r.member.name});
+
+    const col=new THREE.Color(r.color);
+
+    // Core dot (pixel-space, always visible)
+    const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array([x,y,z]),3));
+    const mat=new THREE.PointsMaterial({size:14,sizeAttenuation:false,color:col,transparent:true,opacity:1,depthWrite:false,blending:THREE.AdditiveBlending});
+    dotGroup.add(new THREE.Points(geo,mat));
+
+    // Halo glow (world-space)
+    const geo2=new THREE.BufferGeometry();
+    geo2.setAttribute('position',new THREE.BufferAttribute(new Float32Array([x,y,z]),3));
+    const glowMap=_glowTexWhite||null;
+    const mat2=new THREE.PointsMaterial({size:28,sizeAttenuation:false,color:col,transparent:true,opacity:0.38,depthWrite:false,blending:THREE.AdditiveBlending,...(glowMap?{map:glowMap}:{})});
+    dotGroup.add(new THREE.Points(geo2,mat2));
+  });
+
+  _world.add(dotGroup);
+  _familyDotGroup=dotGroup;
+
+  // Constellation lines
+  if(positions.length>1){
+    const verts=[];
+    for(let i=0;i<positions.length-1;i++){
+      const a=positions[i],b=positions[i+1];
+      verts.push(a.x,a.y,a.z,b.x,b.y,b.z);
+    }
+    if(positions.length>=3){
+      const a=positions[positions.length-1],b=positions[0];
+      verts.push(a.x,a.y,a.z,b.x,b.y,b.z);
+    }
+    const lineGeo=new THREE.BufferGeometry();
+    lineGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(verts),3));
+    const lineMat=new THREE.LineBasicMaterial({color:0x22d3a4,transparent:true,opacity:0.45,depthWrite:false,blending:THREE.AdditiveBlending});
+    const lines=new THREE.LineSegments(lineGeo,lineMat);
+    _world.add(lines);
+    _familyLineGroup=lines;
+  }
+
+  // Pan camera to centroid
+  const cx=positions.reduce((s,p)=>s+p.x,0)/positions.length;
+  const cy=positions.reduce((s,p)=>s+p.y,0)/positions.length;
+  const cz=positions.reduce((s,p)=>s+p.z,0)/positions.length;
+  if(_targetCameraTarget){_targetCameraTarget.set(cx*0.35,cy*0.35,cz*0.35);}
+  _targetRadius=210;
+
+  closeFamilyConstellation();
+}
+
+function clearFamilyFrom3D(){
+  if(_familyLineGroup&&_world){
+    _world.remove(_familyLineGroup);
+    if(_familyLineGroup.geometry)_familyLineGroup.geometry.dispose();
+    if(_familyLineGroup.material)_familyLineGroup.material.dispose();
+    _familyLineGroup=null;
+  }
+  if(_familyDotGroup&&_world){
+    _familyDotGroup.children.forEach(c=>{
+      if(c.geometry)c.geometry.dispose();
+      if(c.material)c.material.dispose();
+    });
+    _world.remove(_familyDotGroup);
+    _familyDotGroup=null;
+  }
+}
+
+/* ── FAMILY CERTIFICATE ── */
+function downloadFamilyCertificate(){
+  if(!_familyResults.length)return;
+  const W=700,H=460;
+  const cv=document.createElement('canvas');
+  cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+
+  // Background
+  const bg=ctx.createLinearGradient(0,0,W,H);
+  bg.addColorStop(0,'#020610');bg.addColorStop(.5,'#060e22');bg.addColorStop(1,'#040818');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+  // Stars
+  let rng=(_familyResults[0].member.year||2000)*397;
+  const rr=()=>{rng=(rng*1664525+1013904223)&0xffffffff;return(rng>>>0)/0xffffffff;};
+  for(let i=0;i<250;i++){
+    const sx=rr()*W,sy=rr()*H,sz=rr()*.8+.1;
+    ctx.beginPath();ctx.arc(sx,sy,sz,0,Math.PI*2);
+    ctx.fillStyle=`rgba(200,215,255,${rr()*.6+.1})`;ctx.fill();
+  }
+
+  // Border
+  ctx.strokeStyle='rgba(34,211,164,.55)';ctx.lineWidth=1.5;
+  ctx.strokeRect(14,14,W-28,H-28);
+  ctx.strokeStyle='rgba(34,211,164,.22)';ctx.lineWidth=1;
+  ctx.strokeRect(22,22,W-44,H-44);
+
+  ctx.textAlign='center';
+
+  // Header
+  ctx.font='bold 11px Orbitron,sans-serif';ctx.fillStyle='rgba(34,211,164,.7)';
+  ctx.fillText('SIRIUS — FAMILY CONSTELLATION CERTIFICATE',W/2,50);
+
+  ctx.font='900 28px Orbitron,sans-serif';
+  ctx.fillStyle='#fff';
+  ctx.fillText('The Stars of Our Family',W/2,92);
+
+  ctx.strokeStyle='rgba(34,211,164,.2)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(60,108);ctx.lineTo(W-60,108);ctx.stroke();
+
+  // Subtitle
+  ctx.font='13px Inter,sans-serif';ctx.fillStyle='rgba(200,220,255,.6)';
+  const today=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  ctx.fillText(`These stars are receiving the light from each birth right now · ${today}`,W/2,130);
+
+  // Sky canvas mini (shrunk)
+  const skyCv=document.getElementById('fm-sky-canvas');
+  const skyW=300,skyH=100;
+  const skyX=(W-skyW)/2,skyY=148;
+  // roundRect polyfill (Safari/Firefox compat)
+  const _rr=(cx,cy,cw,ch,r)=>{cx.beginPath();cx.moveTo(skyX+r,skyY);cx.lineTo(skyX+cw-r,skyY);cx.arcTo(skyX+cw,skyY,skyX+cw,skyY+r,r);cx.lineTo(skyX+cw,skyY+ch-r);cx.arcTo(skyX+cw,skyY+ch,skyX+cw-r,skyY+ch,r);cx.lineTo(skyX+r,skyY+ch);cx.arcTo(skyX,skyY+ch,skyX,skyY+ch-r,r);cx.lineTo(skyX,skyY+r);cx.arcTo(skyX,skyY,skyX+r,skyY,r);cx.closePath();};
+  ctx.save();
+  _rr(ctx,skyX,skyY,skyW,skyH,8);ctx.clip();
+  ctx.drawImage(skyCv,skyX,skyY,skyW,skyH);
+  ctx.restore();
+  ctx.strokeStyle='rgba(34,211,164,.25)';ctx.lineWidth=1;
+  _rr(ctx,skyX,skyY,skyW,skyH,8);ctx.stroke();
+
+  // Member list
+  const listY=268;
+  const colW=W/Math.max(_familyResults.length,1);
+  _familyResults.forEach((r,i)=>{
+    const cx2=colW*(i+0.5);
+    // Colour dot
+    ctx.beginPath();ctx.arc(cx2,listY,6,0,Math.PI*2);
+    ctx.fillStyle=r.color;ctx.fill();
+    // Name
+    ctx.font='bold 11px Orbitron,sans-serif';ctx.fillStyle=r.color;
+    ctx.fillText(r.member.name,cx2,listY+20);
+    // Date
+    ctx.font='10px Space Mono,sans-serif';ctx.fillStyle='rgba(200,220,255,.55)';
+    ctx.fillText(`Born ${r.member.dateLabel}`,cx2,listY+36);
+    // Star name
+    ctx.font='bold 13px Inter,sans-serif';ctx.fillStyle='#ffd700';
+    ctx.fillText(r.star.name,cx2,listY+56);
+    // Distance
+    ctx.font='9px Space Mono,sans-serif';ctx.fillStyle='rgba(120,160,200,.7)';
+    ctx.fillText(`${r.star.dist_ly.toFixed(1)} light-years`,cx2,listY+70);
+    // Sky tip
+    const sky=r.sky;
+    if(sky&&sky.visible_now){
+      ctx.font='9px Inter,sans-serif';ctx.fillStyle='rgba(34,211,164,.75)';
+      ctx.fillText(`▲ ${sky.compass} · ${(sky.alt_now||0).toFixed(0)}° up`,cx2,listY+86);
+    }else if(sky&&(sky.best_alt||0)>0){
+      ctx.font='9px Inter,sans-serif';ctx.fillStyle='rgba(77,159,255,.6)';
+      ctx.fillText(`Best: ${sky.best_compass} · ${(sky.best_alt||0).toFixed(0)}°`,cx2,listY+86);
+    }
+  });
+
+  // Divider
+  ctx.strokeStyle='rgba(34,211,164,.15)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(60,H-70);ctx.lineTo(W-60,H-70);ctx.stroke();
+
+  // Footer
+  ctx.font='italic 11px Inter,sans-serif';ctx.fillStyle='rgba(200,220,255,.35)';
+  ctx.fillText('"The light from each of these births has been crossing space ever since. Nothing can stop it."',W/2,H-50);
+  ctx.font='9px Orbitron,sans-serif';ctx.fillStyle='rgba(34,211,164,.35)';
+  ctx.fillText('SIRIUS · Codebrew 2026',W/2,H-30);
+
+  // Download
+  const a=document.createElement('a');
+  a.download='family-constellation.png';
+  a.href=cv.toDataURL('image/png');
+  a.click();
+}
+
+/* ── REVERSE LOOKUP ── */
+let _rlStarList=[];
+
+async function populateRLDatalist(){
+  if(_rlStarList.length)return;
+  try{
+    const r=await fetch('/api/stars?light_years=50&tolerance=0.98');
+    const d=await r.json();
+    _rlStarList=(d.stars||[]).map(s=>s.name).filter(Boolean);
+    const dl=document.getElementById('rl-datalist');
+    dl.innerHTML=_rlStarList.map(n=>`<option value="${n}"></option>`).join('');
+  }catch{}
+}
+
+async function runReverseLookup(){
+  const q=(document.getElementById('rl-query').value||'').trim();
+  if(!q)return;
+  const resultEl=document.getElementById('rl-result');
+  resultEl.style.display='none';
+  resultEl.innerHTML='<div style="color:var(--mid);font-size:.78rem;padding:12px 0">Searching…</div>';
+  resultEl.style.display='block';
+
+  try{
+    let star=null;
+    // If it looks like a number, treat it as ly directly
+    const asNum=parseFloat(q);
+    if(!isNaN(asNum)&&asNum>0){
+      const r=await fetch(`/api/stars?light_years=${asNum.toFixed(2)}&tolerance=0.15`);
+      const d=await r.json();
+      const stars=d.stars||[];
+      if(stars.length){
+        let best=stars[0],bDiff=Infinity;
+        stars.forEach(s=>{const diff=Math.abs((s.dist_ly||0)-asNum);if(diff<bDiff){bDiff=diff;best=s;}});
+        star=best;
+      }
+      if(!star) star={name:`${asNum.toFixed(1)} ly — unnamed region`,dist_ly:asNum,spectral_type:'?',constellation:'—'};
+    } else {
+      // Try fetching by name: search for it via year-range approach
+      // First try: check if it's a named star in our catalog via a broad search
+      const r=await fetch(`/api/stars?light_years=100&tolerance=0.99`);
+      const d=await r.json();
+      star=(d.stars||[]).find(s=>(s.name||'').toLowerCase()===q.toLowerCase());
+      if(!star){
+        // Try partial match
+        star=(d.stars||[]).find(s=>(s.name||'').toLowerCase().includes(q.toLowerCase()));
+      }
+      if(!star){
+        resultEl.innerHTML=`<div style="color:#ff8b8b;font-size:.78rem;padding:8px">No star found matching "${q}". Try a distance in light-years (e.g. 8.6) or a well-known star name like Sirius, Vega, Betelgeuse.</div>`;
+        return;
+      }
+    }
+
+    const watchingYear=Math.round(CURRENT_YEAR-star.dist_ly);
+    const eraRGB=eraColor(star.dist_ly);
+    const eraHex=`rgb(${Math.round(eraRGB[0]*255)},${Math.round(eraRGB[1]*255)},${Math.round(eraRGB[2]*255)})`;
+    const eraTxt=eraLabel(star.dist_ly);
+    const yearStr=watchingYear<0?`${Math.abs(watchingYear)} BCE`:`${watchingYear} CE`;
+
+    resultEl.innerHTML=`<div class="rl-card">
+      <div class="rl-star-name">${star.name}</div>
+      <div class="rl-watching">${star.dist_ly.toLocaleString(undefined,{maximumFractionDigits:1})} light-years away · ${star.spectral_type||'?'}-type · ${star.constellation||'—'}</div>
+      <div style="font-size:.72rem;color:var(--mid);margin-bottom:8px">Right now, <strong style="color:#fff">${star.name}</strong> is receiving the light that left Earth in:</div>
+      <div class="rl-year-big">${yearStr}</div>
+      <div><span class="rl-era" style="background:${eraHex}22;border:1px solid ${eraHex}66;color:${eraHex}">${eraTxt}</span></div>
+      <div style="font-size:.72rem;color:var(--mid);line-height:1.7;margin-top:6px">
+        ${watchingYear>0?`The light leaving Earth in <strong>${yearStr}</strong> has been traveling for ${Math.round(star.dist_ly).toLocaleString()} years. It is arriving at ${star.name} for the very first time.`:`This star is so close (${star.dist_ly.toFixed(1)} ly) it's watching Earth from only ${Math.round(star.dist_ly)} years ago.`}
+      </div>
+      <button class="rl-search-btn" onclick="closeFamilyConstellation();searchStars(${watchingYear},'${star.name} is watching','Star lookup',${star.dist_ly})">Search ${yearStr} events in the main view ✦</button>
+    </div>`;
+  }catch(e){
+    resultEl.innerHTML=`<div style="color:#ff8b8b;font-size:.78rem">Error fetching data. Please try again.</div>`;
+  }
+}
+
+/* ════════ KEYBOARD SHORTCUTS ════════ */
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+  if(e.key==='r'||e.key==='R')pickRandom();
+  if(e.key==='a'||e.key==='A')openPanel('archive');
+  if(e.key==='e'||e.key==='E')toggleEraMode();
+  if(e.key==='/')showCenterUI();
+});
+
+/* ════════ INIT ════════ */
+buildEraLegend();
+initScene();
+loadEvents();
+// Show HUD after brief delay
+setTimeout(()=>document.getElementById('hud').classList.add('visible'),1000);
+</script>
+</body>
+</html>
